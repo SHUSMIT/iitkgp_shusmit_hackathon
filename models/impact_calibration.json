@@ -1,0 +1,14 @@
+{
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "target": "absolute next-trading-day price move in percent",
+  "target_transform": "log1p",
+  "p10_abs_return_pct": 0.09460519999265671,
+  "p90_abs_return_pct": 6.517173767089844,
+  "rows": 50000,
+  "train_rows": 40000,
+  "validation_rows": 10000,
+  "validation_mae_pct_points": 1.6994136571884155,
+  "validation_rmse_pct_points": 3.223804246284097,
+  "median_baseline_mae_pct_points": 1.7308390140533447,
+  "validation_period_start": "2021-03-26 11:30:00+00:00"
+}

@@ -1,0 +1,9 @@
+RiskPulse prototype contents
+
+Bundled data:
+- data/sample_news.csv: synthetic article examples
+- data/portfolio.csv: synthetic portfolio exposures
+- data/entity_universe.csv: public company name/ticker lookup
+- data/public_news_snapshot.csv: 30 Google News RSS headlines fetched 2026-10-03
+
+Trained prototype artifacts are bundled under models/: impact_xgb.json, impact_calibration.json, training_report.json, and the optional 34 MiB embedding_cache.npz. They were produced in a Kaggle T4 session from the public EDT benchmark. Validation only narrowly beats a median baseline; treat the model as experimental. Optional pretrained language models are used for inference and are downloaded on first model-backed run.

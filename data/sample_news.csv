@@ -1,0 +1,7 @@
+article_id,published_at,source,publisher,title,summary,url,query
+s1,2026-10-02T05:30:00Z,gdelt,Demo Financial Wire,"Central bank officials signal a faster pace of rate cuts","Officials said inflation is easing faster than expected while growth remains resilient.",https://example.com/rates,"rates"
+s2,2026-10-02T06:05:00Z,google_news,Demo Market Desk,"Major lender faces unexpected cyberattack and service outage","The bank suspended some online services while investigators assessed the incident and potential customer impact.",https://example.com/cyber,"banking"
+s3,2026-10-02T06:25:00Z,gdelt,Demo Global News,"New sanctions announced after geopolitical escalation","Governments announced additional export controls and restrictions following an escalation in regional conflict.",https://example.com/sanctions,"sanctions"
+s4,2026-10-02T07:10:00Z,google_news,Demo Corporate News,"Apple raises annual guidance after strong demand","Apple cited record adoption of its new platform and raised full-year revenue expectations.",https://example.com/guidance,"earnings"
+s5,2026-10-02T07:45:00Z,gdelt,Demo Credit Journal,"Regional borrower enters debt restructuring talks","The borrower is seeking revised terms after missing a scheduled debt payment and facing a liquidity squeeze.",https://example.com/default,"credit"
+s6,2026-10-02T08:10:00Z,google_news,Demo Deal Monitor,"Large bank announces acquisition of a digital payments platform","The parties expect the transaction to expand payments capabilities and deliver cost synergies.",https://example.com/merger,"merger"

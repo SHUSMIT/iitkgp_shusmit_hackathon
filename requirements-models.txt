@@ -1,0 +1,4 @@
+# Optional pretrained inference models. They are never fine-tuned here.
+transformers>=4.44,<5
+torch>=2.2,<3
+sentence-transformers>=3.0,<6

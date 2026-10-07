@@ -1,0 +1,29 @@
+digraph RiskPulse {
+  rankdir=LR;
+  graph [pad=0.25, nodesep=0.35, ranksep=0.65, bgcolor="#F4F7FA"];
+  node [shape=box, style="rounded,filled", fontname="Arial", fontsize=11, fillcolor="#FFFFFF", color="#DDE6ED", margin="0.18,0.12"];
+  edge [color="#7596A7", arrowsize=0.75];
+  google [label="Google News RSS\nRecent headlines"];
+  gdelt [label="GDELT DOC\nNews metadata"];
+  csv [label="CSV upload\nNews / portfolio"];
+  ingest [label="Normalize + deduplicate\nStable article IDs"];
+  sentiment [label="Frozen FinBERT (optional)\nSentiment inference"];
+  embed [label="Frozen MiniLM + prototypes\nEvent classification"];
+  impact [label="XGBoost CPU / rule fallback\nSeverity proxy, 1 to 10"];
+  signals [label="Structured event signals\nEvent, tone, entity, source"];
+  portfolio [label="Portfolio exposures\nSynthetic sample or upload"];
+  stress [label="Scenario stress engine\nBeta, duration, spread, credit"];
+  api [label="FastAPI service\nValidated workflow"];
+  react [label="React + Vite\nDashboard and charts"];
+  export [label="CSV export\nSignals and loss detail"];
+  edt [label="Public EDT benchmark\nNews + next-day price labels"];
+  kaggle [label="Kaggle GPU\nFrozen MiniLM embeddings"];
+  train [label="CPU XGBoost training\nTime holdout vs median baseline"];
+  model [label="impact_xgb.json\nCalibration + optional cache"];
+  google -> ingest; gdelt -> ingest; csv -> ingest;
+  ingest -> sentiment; ingest -> embed; ingest -> impact;
+  sentiment -> signals; embed -> signals; impact -> signals;
+  signals -> stress; portfolio -> stress;
+  stress -> api; api -> react; api -> export;
+  edt -> kaggle -> train -> model -> impact [style=dashed, color="#D59B63"];
+}

@@ -1,0 +1,11 @@
+.venv/
+web/node_modules/
+web/dist/
+__pycache__/
+*.py[cod]
+.env
+runtime/*.csv
+runtime/*.json
+runtime/*.log
+.cache/
+.pytest_cache/

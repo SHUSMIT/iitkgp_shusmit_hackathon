@@ -1,0 +1,26 @@
+ticker,entity_name,asset_sector
+JPM,JPMorgan Chase,Financials
+GS,Goldman Sachs,Financials
+BAC,Bank of America,Financials
+MS,Morgan Stanley,Financials
+C,Citigroup,Financials
+WFC,Wells Fargo,Financials
+BLK,BlackRock,Financials
+SCHW,Charles Schwab,Financials
+AXP,American Express,Financials
+COF,Capital One,Financials
+V,Visa,Financials
+MA,Mastercard,Financials
+AAPL,Apple,Technology
+MSFT,Microsoft,Technology
+GOOGL,Alphabet,Technology
+AMZN,Amazon,Consumer
+META,Meta,Technology
+NVDA,NVIDIA,Technology
+XOM,Exxon Mobil,Energy
+CVX,Chevron,Energy
+JNJ,Johnson & Johnson,Healthcare
+PFE,Pfizer,Healthcare
+WMT,Walmart,Consumer
+HD,Home Depot,Consumer
+CAT,Caterpillar,Industrials
