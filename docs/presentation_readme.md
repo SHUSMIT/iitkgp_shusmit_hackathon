@@ -1,6 +1,6 @@
-# Presentation and pitch checklist
+# Report, visual summary, and pitch checklist
 
-The submission guidelines require **5–7 slides** in PDF or PPTX. This repository contains a six-slide deck in `presentation.pdf` and `presentation.pptx`. There is no separate report deliverable in the guidelines.
+The primary written submission is [report.md](report.md). This repository also contains a six-slide PDF/PPTX visual summary. The report is the detailed description of the chosen problem statement, architecture, generated verification data, implementation, results, and demonstration.
 
 ## Slide content
 

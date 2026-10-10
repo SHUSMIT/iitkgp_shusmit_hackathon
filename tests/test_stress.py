@@ -15,3 +15,12 @@ def test_low_impact_does_not_stress():
     r = run_stress(pf, 'Geopolitical', 5.0)
     assert not r.triggered
     assert abs(r.before_value-r.after_value) < 1e-9
+
+
+def test_module_b_covers_generated_mixed_portfolio():
+    pf = load_portfolio(str(ROOT/'data'/'portfolio.csv'))
+    assert {'loan', 'bond', 'derivative', 'equity', 'credit'} <= set(pf['asset_type'].str.lower())
+    r = run_stress(pf, 'Credit Event', 8.5)
+    assert r.triggered
+    assert (r.asset_table['credit_loss_increment'] > 0).any()
+    assert len(r.asset_table) == len(pf)

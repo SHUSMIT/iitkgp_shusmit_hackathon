@@ -19,6 +19,11 @@ def test_sample_pipeline_route():
     assert result['article_count'] > 0
     assert result['portfolio_asset_count'] == 12
     assert result['scenarios']
+    signal = result['signals'][0]
+    assert -1.0 <= signal['sentiment'] <= 1.0
+    assert signal['event_class']
+    assert 1.0 <= signal['impact_score'] <= 10.0
+    assert {'before_value', 'after_value', 'loss_value', 'assets'} <= set(result['scenarios'][0])
 
 
 def test_upload_pipeline_route():
