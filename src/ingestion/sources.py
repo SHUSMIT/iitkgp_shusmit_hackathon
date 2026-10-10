@@ -1,15 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
 import hashlib
 import html
-import os
 import re
-import time
 import warnings
 from typing import Iterable
-from urllib.parse import urlencode
 import xml.etree.ElementTree as ET
 
 import requests
@@ -51,27 +47,14 @@ def fetch_gdelt(query: str, timespan: str = '24h', max_records: int = 50, timeou
         'timespan': timespan,
         'sort': 'datedesc',
     }
-    last_error: Exception | None = None
-    for attempt in range(3):
-        try:
-            r = requests.get(
-                GDELT_URL,
-                params=params,
-                timeout=timeout,
-                headers={'User-Agent': 'RiskPulse-Hackathon/1.0'},
-            )
-            if r.status_code != 429:
-                break
-            last_error = requests.HTTPError(response=r)
-            time.sleep(2 ** attempt)
-        except requests.RequestException as exc:
-            last_error = exc
-            if attempt == 2:
-                raise
-            time.sleep(2 ** attempt)
-    else:
-        if last_error:
-            raise last_error
+    r = requests.get(
+        GDELT_URL,
+        params=params,
+        timeout=timeout,
+        headers={'User-Agent': 'RiskPulse-Hackathon/1.0'},
+    )
+    if r.status_code == 429:
+        raise requests.HTTPError('GDELT rate limit reached; continuing with other sources.', response=r)
     r.raise_for_status()
     payload = r.json()
     out: list[Article] = []

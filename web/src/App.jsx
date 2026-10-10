@@ -158,6 +158,14 @@ function App() {
           </div>
           {error && <div className="error-banner"><AlertTriangle size={16} />{error}<button onClick={() => setError('')}><X size={15} /></button></div>}
         </section>
+        <section className="explain-panel" aria-label="How the analysis works">
+          <div className="explain-heading"><CircleHelp size={16} /><div><b>How to read this workspace</b><span>Decision support from public news to portfolio impact</span></div></div>
+          <div className="explain-grid">
+            <div><strong>What this solves</strong><p>Turns market-moving headlines into explainable event signals and shows which portfolio positions are most exposed.</p></div>
+            <div><strong>What happens</strong><p>Headlines are normalized, scored for sentiment and event type, ranked from 1–10, then high-impact events are transmitted through beta, duration, spread, PD, and LGD.</p></div>
+            <div><strong>Important assumptions</strong><p>A score of 7+ triggers a scenario. The portfolio and sample news are synthetic; live sources can be partial; shocks are illustrative, not forecasts or causal loss estimates.</p></div>
+          </div>
+        </section>
 
         {!result ? <section className="empty-state"><div className="empty-graphic"><div className="orbit orbit-one" /><div className="orbit orbit-two" /><div className="empty-core"><Activity size={30} /></div></div><h2>Your risk picture starts here</h2><p>Run the sample for an instant walkthrough, or connect to public feeds to scan current headlines.</p><button className="button primary" onClick={runAnalysis} disabled={loading || !apiOnline}><Sparkles size={16} /> Analyze sample portfolio</button></section> : <>
           <div className="result-meta"><div className="meta-right"><Wifi size={14} /> {result.article_count} articles <span /> <BriefcaseBusiness size={14} /> {result.portfolio_asset_count} portfolio positions <span /> Updated just now</div></div>

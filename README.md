@@ -1,77 +1,15 @@
 # RiskPulse - S&P Global & Crisil Campus Hackathon
 
-**Candidate Name:** SHUSMIT  
-**College Email ID:** shusmit.sarkar@gmail.com  
-**College / Campus:** OpenEnv / Copilot  
-**Demo Video Link:** To be added after recording  
-**Slide Deck:** [docs/presentation.pdf](docs/presentation.pdf)  
-**Repository:** https://github.com/SHUSMIT/spglobal
-
-## 1. Project overview / problem statement and approach
-
-RiskPulse turns public financial news into AI-generated sentiment and event signals, then applies those signals to a portfolio CSV to produce asset-level and portfolio-level stress results.
-
-## Project overview
-
-The system ingests Google News RSS, GDELT DOC 2.0, NewsAPI (when a key is configured), or an uploaded news CSV. FinBERT produces sentiment, MiniLM produces frozen text embeddings, and a bundled XGBoost model estimates a 1-10 market-impact proxy. The output is passed to a transparent portfolio stress engine using equity beta, rate duration, spread duration, probability of default, and loss-given-default.
-
-The portfolio is supplied as CSV. Every position can be opened in the dashboard to inspect its sensitivities, scenario loss, credit-loss contribution, and related analyzed news. Clicking a news row opens the source link together with the AI event, sentiment, confidence, and impact analysis.
-
-## 2. Architecture and tech stack
-
-See [docs/architecture.png](docs/architecture.png) and [docs/architecture.dot](docs/architecture.dot).
-
-- Python, FastAPI, pandas, NumPy, XGBoost, scikit-learn
-- FinBERT and sentence-transformers/all-MiniLM-L6-v2
-- React, Vite, Recharts, Papa Parse
-- Google News RSS, GDELT DOC 2.0, optional NewsAPI
-- CSV portfolio and news inputs
-
-## 3. Dataset used
-
-- `data/sample_news.csv`: synthetic demonstration news.
-- `data/portfolio.csv`: synthetic portfolio positions and sensitivities.
-- `data/entity_universe.csv`: public company/entity lookup used for ticker mentions.
-- `data/public_news_snapshot.csv`: public Google News RSS snapshot.
-- The XGBoost artifact was trained from the public EDT benchmark described in [docs/KAGGLE_TRAINING.md](docs/KAGGLE_TRAINING.md). The large raw benchmark is downloaded on demand and is not copied into this repository.
-
-The trained target is a next-day single-stock movement proxy, not a causal event impact or a guaranteed portfolio-loss forecast. Portfolio shocks are explicit scenario assumptions and are shown per position.
-
-### Portfolio CSV schema
-
-Required columns are `asset_id`, `asset_type`, `current_value`, `notional`, `equity_beta`, `duration`, `spread_duration`, `pd`, and `lgd`. Optional `sector` and `counterparty` columns improve news matching. An optional `ticker` column (for example `AAPL`) can be added when a position should be associated with a listed issuer; related analyzed headlines are then matched against the ticker, issuer, counterparty, and sector.
-
-## 4. Quickstart and installation
-
-Runtime tested: Python 3.13, Node.js 20+, Windows.
+## Run it first
 
 ```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 python -m pip install -r requirements-models.txt
+python -m uvicorn src.api.app:app --reload
 ```
 
-The first model-backed run downloads FinBERT and MiniLM weights from Hugging Face and caches them locally. Pretrained inference is always used by the dashboard and API; there is no model-selection toggle in the UI.
-
-Optional NewsAPI configuration is local-only:
-
-```powershell
-Copy-Item .env.example .env
-# edit .env and set NEWSAPI_KEY
-```
-
-Never commit `.env` or publish the key.
-
-For the conversational analyst, add `GROQ_API_KEY` to the same local `.env`. The dashboard sends the complete analyzed-news set, plus the selected position when one is open, to the configured Groq model. If the key is absent, the UI reports that configuration error explicitly.
-
-Start the backend:
-
-```powershell
-.venv\Scripts\python.exe -m uvicorn src.api.app:app --reload
-```
-
-In a second terminal, start the dashboard:
+In a second PowerShell terminal:
 
 ```powershell
 cd web
@@ -79,39 +17,74 @@ npm install
 npm run dev
 ```
 
-Open the Vite URL shown in the terminal. Choose sample news, live public feeds, or a news CSV. A portfolio CSV can be uploaded; otherwise `data/portfolio.csv` is loaded through the API.
+Open the Vite URL printed in the terminal. The first model-backed run downloads the frozen inference weights and caches them locally. To use the optional conversational analyst or NewsAPI, copy `.env.example` to `.env` and add the relevant local key; never commit `.env`.
 
-## News source queries
+## Submission status and remaining actions
 
-- Google News RSS uses the `q` parameter, for example `banking OR inflation OR recession when:1d`.
-- GDELT DOC 2.0 uses `query`, `mode=ArtList`, `format=json`, `maxrecords`, `timespan`, and `sort=datedesc`. The application sends a boolean query such as `(bank OR markets OR inflation OR rates OR recession OR sanctions OR merger OR default OR liquidity)`.
-- NewsAPI uses `/v2/everything` with `q`, `language`, `pageSize`, `sortBy`, and `apiKey`.
+The external guidelines require one public GitHub repository containing working code, dependencies, exact commands, architecture, data, a 5–7 slide PDF/PPTX, and a link to a 10-minute unlisted YouTube walkthrough. They do not require a separate technical report.
 
-GDELT and NewsAPI are external services. GDELT can return HTTP 429 during rate limiting; the application retries briefly and continues with sources that are available. NewsAPI requires a valid key and plan quota.
+Before submission, complete these actions:
 
-## 5. Key results and domain impact
+1. Confirm the final public repository name follows `<college>-<candidate-name>-hackathon`, and verify it is public in a private browser window.
+2. Replace the placeholder candidate, campus, demo-link, and deck-link fields below.
+3. Record the walkthrough using the script in [docs/demo_script.md](docs/demo_script.md), show the commands above, and verify the unlisted video in a private browser window.
+4. Use the six-slide deck in [docs/presentation.pdf](docs/presentation.pdf) or [docs/presentation.pptx](docs/presentation.pptx); use [docs/presentation_readme.md](docs/presentation_readme.md) as the final content checklist.
+5. Submit the repository, video, and deck links through the official submission form before the communicated deadline.
 
-The prototype demonstrates an end-to-end flow from news ingestion through pretrained NLP inference, impact scoring, portfolio transmission, asset-level P&L, and conversational risk reasoning. It is designed for a transparent hackathon demonstration: scenario shocks are explicit assumptions, while the AI output is an analytical aid rather than a guaranteed forecast.
+## Project overview
 
-## Tests and build
+RiskPulse turns public financial news into structured sentiment and event signals, then applies those signals to a portfolio CSV to produce asset-level and portfolio-level stress results. The business problem is to move from a large, noisy headline stream to an explainable view of which positions could be exposed to a market event.
+
+The prototype supports bundled synthetic sample news, a public RSS/GDELT live mode, and uploaded news CSVs. It displays the source article, event type, sentiment, confidence, severity, selected scenario shocks, portfolio before/after value, position-level loss, credit-loss contribution, and related news.
+
+## What is being solved
+
+The system is a decision-support prototype for event-driven portfolio risk triage. It is not a causal news-impact model, a guaranteed price forecast, or a production credit-risk system. A severity score of 7 or higher activates a stress scenario; lower scores leave portfolio values unchanged.
+
+## Architecture and tech stack
+
+1. The React/Vite dashboard requests the FastAPI workflow.
+2. The ingestion layer reads sample/uploaded data or makes one bounded request per available public source.
+3. The inference layer produces sentiment, event class, confidence, entity matches, and a 1–10 impact proxy.
+4. The stress engine applies transparent event shocks to equity beta, rate duration, spread duration, PD, and LGD.
+5. The dashboard renders event signals, scenario results, position details, and optional analyst answers.
+
+Python, FastAPI, pandas, NumPy, XGBoost, scikit-learn, frozen transformer inference, React, Vite, Recharts, and Papa Parse are used. See [docs/architecture.png](docs/architecture.png) and [docs/architecture.dot](docs/architecture.dot).
+
+## Data, assumptions, and limitations
+
+- `data/sample_news.csv` and `data/portfolio.csv` are synthetic demonstration data.
+- `data/public_news_snapshot.csv` is a public RSS snapshot used for reproducibility.
+- `data/entity_universe.csv` is a small public company/ticker lookup.
+- The impact artifact was trained from the public EDT benchmark; the large raw source is downloaded by the notebook and is not bundled.
+- Portfolio shocks are illustrative scenario assumptions. The sample portfolio is not a real person's or institution's portfolio.
+- Ticker assignments in the public benchmark and entity matching can be wrong.
+- Live sources can be unavailable or rate limited; the app continues with sources that respond and reports an error if all sources fail.
+- The model metric is a small holdout improvement over a median baseline and does not establish reliable predictive value. See [docs/technical_note.md](docs/technical_note.md).
+
+The portfolio CSV requires `asset_id`, `asset_type`, `current_value`, `notional`, `equity_beta`, `duration`, `spread_duration`, `pd`, and `lgd`. Optional `sector`, `counterparty`, and `ticker` fields improve related-news matching.
+
+## Key results and domain impact
+
+The prototype demonstrates an end-to-end path from public news to explainable portfolio transmission. It makes the scenario assumptions visible, shows the affected positions, and separates current portfolio P&L from the illustrative stress result. This helps an analyst prioritize review rather than treating an automated score as a final investment or credit decision.
+
+## Validation
 
 ```powershell
-.venv\Scripts\python.exe -m pytest -q
-cd web
+.\.venv\Scripts\python.exe -m pytest -q
+Push-Location web
 npm run build
+Pop-Location
 ```
 
-## Key outputs
+## Submission metadata
 
-The dashboard presents:
-
-- AI sentiment, event class, confidence, and impact per article.
-- Source metadata and a link to the full article.
-- Scenario-level portfolio before/after values and losses.
-- Asset-level beta, duration, spread, credit-loss, and scenario-loss details.
-- Position opening value, closing value, and P&L.
-- Related analyzed news for the selected portfolio position.
-- Conversational reasoning over all analyzed news or a selected position when Groq is configured.
+**Candidate Name:** SHUSMIT
+**College Email ID:** shusmit.sarkar@gmail.com
+**College / Campus:** OpenEnv / Copilot
+**Demo Video Link:** To be added after recording
+**Slide Deck:** [docs/presentation.pdf](docs/presentation.pdf)
+**Repository:** https://github.com/SHUSMIT/spglobal
 
 ## License
 
