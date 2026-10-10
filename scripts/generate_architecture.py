@@ -84,34 +84,36 @@ L1 = layer(0, '1  DATA SOURCES', [
     ('GDELT DOC 2.0', 'Global news metadata,\nrefreshed every 15 min'),
     ('NewsAPI (optional)', 'Key-based additional\nnews source'),
     ('CSV upload', 'News and portfolio\nfiles')], [TEAL] * 4)
-L2 = layer(1, '2  INGESTION LAYER   src/ingestion', [
+L2 = layer(1, '2  INGESTION LAYER', [
     ('Schema normalisation', 'Common article record:\ntitle, summary, time, URL'),
     ('Deduplication', 'URL-level merge across\nsources, stable article IDs'),
     ('Text preparation', 'Title and summary joined,\nlength-bounded')], [TEAL] * 3)
-L3 = layer(2, '3  AI / NLP RISK ENGINE   src/models', [
+L3 = layer(2, '3  AI / NLP RISK ENGINE', [
     ('Sentiment', 'FinBERT probabilities\nto a score in [-1, 1]'),
     ('Event classifier', 'Domain terms + MiniLM\nclass-description match'),
     ('Entity matcher', 'Company / ticker\nlookup in text'),
     ('Impact scorer', 'XGBoost on MiniLM\nembeddings, scaled 1-10')], [PURPLE, PURPLE, PURPLE, ORANGE])
-L4 = layer(3, '4  SIGNAL CONTRACT   JSON / CSV', [
-    ('Structured risk signal', 'sentiment, event_class, confidence,\nimpact_score, entities, source'),
-    ('Stress trigger gate', 'impact_score >= 7 activates a\nscenario; below 7 is monitored')], [BLUE, BLUE])
-L5 = layer(4, '5  MODULE B: STRATEGIC STRESS ENGINE   src/stress', [
+_bw = L3[0]['w']
+_y4 = bots[3] + 0.14
+L4 = [box(L3[0]['x'], _y4, _bw, LH - 0.55, 'Structured signal', 'Sentiment, event class,\nconfidence, impact, entities', BLUE),
+      box(L3[1]['x'], _y4, 3 * _bw + 0.4, LH - 0.55, 'Stress trigger gate', 'Impact score of 7 or more activates a scenario;\nlower scores are monitored without stress', BLUE)]
+band(MX, bots[3], MW, LH, '4  SIGNAL CONTRACT   (JSON / CSV)')
+L5 = layer(4, '5  MODULE B: STRATEGIC STRESS ENGINE', [
     ('Portfolio loader', 'Validates value, beta,\nduration, PD, LGD'),
     ('Scenario selector', 'Top-impact event per class\nselects the shock vector'),
     ('Market shock engine', 'Equity beta, rate and\nspread-duration effects'),
     ('Credit loss engine', 'Incremental EL:\nnotional x dPD x LGD')], [GREEN] * 4)
-L6 = layer(5, '6  DELIVERY   src/api, web', [
-    ('FastAPI service', '/analyze  /stress-test\n/pipeline/run  /portfolio'),
+L6 = layer(5, '6  DELIVERY', [
+    ('FastAPI service', 'Analysis, stress-test and\nfull pipeline endpoints'),
     ('React dashboard', 'Signals, scenarios, charts,\nposition drill-down'),
     ('CSV export', 'Signals and position-level\nloss detail')], [BLUE] * 3)
 
-fan_in(L1, L2[0], mids[0], dst_x=L2[0]['x'] + L2[0]['w'] * 0.55)
+fan_in(L1, L2[0], mids[0])
 side(L2[0], L2[1]); side(L2[1], L2[2])
 fan_out(L2[2], L3, mids[1])
-fan_in(L3, L4[0], mids[2], dst_x=L4[0]['x'] + L4[0]['w'] * 0.55)
+fan_in(L3, L4[0], mids[2])
 side(L4[0], L4[1])
-fan_out(L4[1], [L5[1]], mids[3])
+head(L5[1]['cx'], L4[1]['bot'], L5[1]['top'])
 for a, b in zip(L5[:-1], L5[1:]):
     side(a, b)
 fan_out(L5[3], L6, mids[4])
@@ -119,7 +121,7 @@ fan_out(L5[3], L6, mids[4])
 # offline model build (flows upward into the impact scorer)
 band_y, band_top = bots[4], bots[2] + LH
 band(SX, band_y, SW, band_top - band_y, 'OFFLINE MODEL BUILD')
-sub = [('Model artifacts', 'impact_xgb.json +\ncalibration (p10 / p90)', ORANGE),
+sub = [('Model artifacts', 'Trained impact model +\ncalibration (p10 / p90)', ORANGE),
        ('XGBoost training', 'Time-ordered holdout\nvs median baseline', ORANGE),
        ('Kaggle GPU', 'Frozen MiniLM\nembeddings', TEAL),
        ('EDT benchmark', 'Public news + next-day\nprice moves', PURPLE)]

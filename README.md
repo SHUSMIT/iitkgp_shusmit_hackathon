@@ -43,14 +43,14 @@ Open the Vite URL printed in the terminal. The first model-backed run downloads 
 
 **Data flow:** Google News RSS / GDELT DOC 2.0 / NewsAPI (optional) / CSV upload -> normalisation and URL deduplication -> NLP inference (sentiment, event class, entities, impact) -> structured signals -> Module B stress engine (with portfolio) -> FastAPI -> React dashboard and CSV export.
 
-| Layer | Location | Role |
-|---|---|---|
-| Ingestion | `src/ingestion/sources.py` | Fetch, clean, deduplicate articles from all sources |
-| Risk inference | `src/models/inference.py` | FinBERT sentiment, MiniLM class-description event classification, entity matching, XGBoost impact score |
-| Impact training | `src/models/training.py`, `notebooks/riskpulse_kaggle_embeddings_xgb.ipynb`, `scripts/train_impact.py` | Training and calibration of the impact model |
-| Stress engine | `src/stress/model.py` | Portfolio validation, event shocks, asset-level loss |
-| Workflow & API | `src/services/workflow.py`, `src/api/app.py` | Orchestration; `/health`, `/portfolio`, `/analyze`, `/stress-test`, `/pipeline/run`, `/llm/chat` |
-| Dashboard | `web/src/App.jsx` | Signals, scenarios, charts, position drill-down, export |
+| Layer | Role |
+|---|---|
+| Ingestion | Fetch, clean and deduplicate articles from all sources |
+| Risk inference | FinBERT sentiment, MiniLM class-description event classification, entity matching, XGBoost impact score |
+| Impact training | Offline training and calibration of the impact model |
+| Stress engine | Portfolio validation, event shocks, asset-level loss |
+| Workflow and API | Orchestration and endpoints for analysis, stress testing, pipeline runs and portfolio retrieval |
+| Dashboard | Signals, scenarios, charts, position drill-down, export |
 
 **Tech stack:** Python, FastAPI, pandas, NumPy, scikit-learn, XGBoost, FinBERT and MiniLM (frozen transformer inference), React, Vite, Recharts, Papa Parse.
 
@@ -58,12 +58,14 @@ Open the Vite URL printed in the terminal. The first model-backed run downloads 
 
 ## 3. Dataset Used
 
-- `data/portfolio.csv`: 12-position synthetic wholesale-banking portfolio (3 loans, 3 bonds, 2 derivatives, 3 equities, 1 credit pool; total value USD 105.12M) with value, notional, beta, duration, spread duration, PD and LGD.
-- `data/sample_news.csv`: generated financial-news records covering multiple event types, used to exercise the full pipeline.
-- `data/public_news_snapshot.csv`: snapshot of public Google News RSS headlines.
-- `data/entity_universe.csv`: public company/ticker lookup for entity matching.
-- Impact model training data: the public EDT news and market-price benchmark (downloaded by the notebook, not bundled); 50,000 of 75,395 valid rows used. Training artifacts are in `models/`.
-- Live sources: Google News RSS and GDELT DOC 2.0 (NewsAPI optional).
+- **Portfolio:** 12-position synthetic wholesale-banking portfolio (3 loans, 3 bonds, 2 derivatives, 3 equities, 1 credit pool; total value USD 105.12M) with value, notional, beta, duration, spread duration, PD and LGD.
+- **Sample news:** generated financial-news records covering multiple event types, used to exercise the full pipeline.
+- **News snapshot:** public Google News RSS headlines captured for reproducibility.
+- **Entity lookup:** small public company and ticker list used for entity matching.
+- **Impact model training data:** the public EDT news and market-price benchmark (downloaded by the training notebook, not bundled); 50,000 of 75,395 valid rows used.
+- **Live sources:** Google News RSS and GDELT DOC 2.0 (NewsAPI optional).
+
+All bundled datasets are in the `data` folder.
 
 **Assumptions:** the portfolio is synthetic and not a real institution's book; shocks are illustrative scenario assumptions; the impact score is a market-movement proxy, not a causal loss forecast; ticker assignments in public benchmarks can be imperfect. A replacement portfolio CSV must contain `asset_id`, `asset_type`, `current_value`, `notional`, `equity_beta`, `duration`, `spread_duration`, `pd`, `lgd` (optional: `sector`, `counterparty`, `ticker`).
 
@@ -99,18 +101,6 @@ Pop-Location
 ![Results](docs/results.png)
 
 - **Domain impact:** analysts get a severity-ranked, classified signal list, see which loans, bonds, derivatives and equities are exposed and by how much, and can audit or recalibrate every shock and sensitivity. The JSON/CSV contract lets other downstream consumers plug into the same engine.
-
-## Repository layout
-
-```
-src/        ingestion, models, stress engine, workflow, API, CLI
-web/        React/Vite dashboard
-data/       portfolio, news and entity datasets
-models/     trained impact model, calibration, training report
-notebooks/  Kaggle embedding + XGBoost training notebook
-docs/       presentation.pdf, report.pdf, architecture.png, results.png, technical note
-tests/      API and stress-engine tests
-```
 
 ## License
 
