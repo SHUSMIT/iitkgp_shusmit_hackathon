@@ -1,9 +1,0 @@
-RiskPulse Module B submission contents
-
-Bundled data:
-- data/sample_news.csv: synthetic article examples
-- data/portfolio.csv: synthetic portfolio exposures
-- data/entity_universe.csv: public company name/ticker lookup
-- data/public_news_snapshot.csv: 30 Google News RSS headlines fetched 2026-10-03
-
-Trained artifacts are bundled under models/: impact_xgb.json, impact_calibration.json, training_report.json, and the optional 34 MiB embedding_cache.npz. They were produced in a Kaggle T4 session from the public EDT benchmark. Pretrained language models are downloaded on first model-backed run. The repository contains the generated synthetic news and portfolio data required to verify the complete Module B workflow.

@@ -15,9 +15,12 @@ ax = fig.add_axes([0, 0, 1, 1])
 ax.set_xlim(0, W); ax.set_ylim(0, H); ax.axis('off')
 
 
-def band(x, y, w, h, label):
+def band(x, y, w, h, label, vertical=False):
     ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle='round,pad=0,rounding_size=0.12', fc=BAND, ec=EDGE, lw=1.1))
-    ax.text(x + 0.2, y + h - 0.22, label, fontsize=9.5, color=MUTED, fontweight='bold', va='center')
+    if vertical:
+        ax.text(x + 0.27, y + h / 2, label, fontsize=8.5, color=MUTED, fontweight='bold', va='center', ha='center', rotation=90)
+    else:
+        ax.text(x + 0.2, y + h - 0.22, label, fontsize=9.5, color=MUTED, fontweight='bold', va='center')
 
 
 def box(x, y, w, h, title, sub, color):
@@ -73,32 +76,32 @@ mids = [bots[i] - GAP / 2 for i in range(5)]  # bus heights below layer i
 
 def layer(i, label, specs, colors):
     y = bots[i]
-    band(MX, y, MW, LH, label)
-    n, pad, gap = len(specs), 0.2, 0.2
-    bw = (MW - 2 * pad - (n - 1) * gap) / n
-    return [box(MX + pad + k * (bw + gap), y + 0.14, bw, LH - 0.55, t, s, colors[k]) for k, (t, s) in enumerate(specs)]
+    band(MX, y, MW, LH, label, vertical=True)
+    n, left, pad, gap = len(specs), 0.6, 0.2, 0.2
+    bw = (MW - left - pad - (n - 1) * gap) / n
+    return [box(MX + left + k * (bw + gap), y + 0.14 + 0.12, bw, LH - 0.4, t, s, colors[k]) for k, (t, s) in enumerate(specs)]
 
 
-L1 = layer(0, '1  DATA SOURCES', [
+L1 = layer(0, '1  SOURCES', [
     ('Google News RSS', 'Query-driven headlines\nand summaries'),
     ('GDELT DOC 2.0', 'Global news metadata,\nrefreshed every 15 min'),
     ('NewsAPI (optional)', 'Key-based additional\nnews source'),
     ('CSV upload', 'News and portfolio\nfiles')], [TEAL] * 4)
-L2 = layer(1, '2  INGESTION LAYER', [
+L2 = layer(1, '2  INGESTION', [
     ('Schema normalisation', 'Common article record:\ntitle, summary, time, URL'),
     ('Deduplication', 'URL-level merge across\nsources, stable article IDs'),
     ('Text preparation', 'Title and summary joined,\nlength-bounded')], [TEAL] * 3)
-L3 = layer(2, '3  AI / NLP RISK ENGINE', [
+L3 = layer(2, '3  NLP ENGINE', [
     ('Sentiment', 'FinBERT probabilities\nto a score in [-1, 1]'),
     ('Event classifier', 'Domain terms + MiniLM\nclass-description match'),
     ('Entity matcher', 'Company / ticker\nlookup in text'),
     ('Impact scorer', 'XGBoost on MiniLM\nembeddings, scaled 1-10')], [PURPLE, PURPLE, PURPLE, ORANGE])
 _bw = L3[0]['w']
-_y4 = bots[3] + 0.14
-L4 = [box(L3[0]['x'], _y4, _bw, LH - 0.55, 'Structured signal', 'Sentiment, event class,\nconfidence, impact, entities', BLUE),
-      box(L3[1]['x'], _y4, 3 * _bw + 0.4, LH - 0.55, 'Stress trigger gate', 'Impact score of 7 or more activates a scenario;\nlower scores are monitored without stress', BLUE)]
-band(MX, bots[3], MW, LH, '4  SIGNAL CONTRACT   (JSON / CSV)')
-L5 = layer(4, '5  MODULE B: STRATEGIC STRESS ENGINE', [
+_y4 = bots[3] + 0.14 + 0.12
+L4 = [box(L3[0]['x'], _y4, _bw, LH - 0.4, 'Structured signal', 'Sentiment, event class,\nimpact score, entities', BLUE),
+      box(L3[1]['x'], _y4, 3 * _bw + 0.4, LH - 0.4, 'Stress trigger gate', 'Impact score of 7 or more activates a scenario;\nlower scores are monitored without stress', BLUE)]
+band(MX, bots[3], MW, LH, '4  SIGNALS', vertical=True)
+L5 = layer(4, '5  MODULE B', [
     ('Portfolio loader', 'Validates value, beta,\nduration, PD, LGD'),
     ('Scenario selector', 'Top-impact event per class\nselects the shock vector'),
     ('Market shock engine', 'Equity beta, rate and\nspread-duration effects'),

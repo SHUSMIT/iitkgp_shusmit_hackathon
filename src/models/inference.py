@@ -49,7 +49,7 @@ class ModelBundle:
     embedding_model: object | None = None
     impact_model: object | None = None
     impact_calibration: dict | None = None
-    mode: str = 'fallback'
+    mode: str = 'lexical'
 
 
 class RiskInference:
@@ -96,7 +96,7 @@ class RiskInference:
 
         if errors:
             raise RuntimeError(
-                'Pretrained inference could not be initialized; fallback inference is disabled. '
+                'Pretrained inference could not be initialized; lexical-only inference is disabled. '
                 + ' | '.join(errors)
             )
         self.bundle.mode = 'pretrained'
@@ -216,7 +216,7 @@ class RiskInference:
         return sorted(set(found))
 
     def impact(self, text: str, event: str, confidence: float, sentiment: float, vector: np.ndarray | None = None) -> float:
-        """Use fitted historical market moves when artifacts exist; else use the rule fallback."""
+        """Use fitted historical market moves when artifacts exist; else use the rule-based score."""
         if self.bundle.impact_model is not None and self.bundle.embedding_model is not None and self.bundle.impact_calibration:
             features = vector if vector is not None else self._embed([text])[0]
             predicted_log_move = float(self.bundle.impact_model.predict(features.reshape(1, -1))[0])
@@ -225,7 +225,7 @@ class RiskInference:
             high = float(self.bundle.impact_calibration['p90_abs_return_pct'])
             return float(np.clip(1.0 + 9.0 * (predicted_move - low) / max(high - low, 1e-6), 1.0, 10.0))
 
-        """Transparent fallback severity rule; not a learned market forecast."""
+        """Transparent rule-based severity score; not a learned market forecast."""
         words = re.findall(r"[a-zA-Z][a-zA-Z'-]{1,}", text.lower())
         risk_hits = min(float(sum(word in RISK_WORDS for word in words)), 3.0)
         urgency_hits = min(float(sum(word in URGENCY_WORDS for word in words)), 2.0)

@@ -2,7 +2,7 @@
 
 ## Inference and event severity
 
-FinBERT sentiment and MiniLM sentence embeddings are optional, frozen pretrained models. MiniLM compares article text with a small set of transparent event prototypes. When the Kaggle artifacts are installed, XGBoost predicts the absolute next-day single-stock price move from the same frozen MiniLM vector. Without those artifacts, exact risk terms drive event classification and a documented rule provides fallback severity.
+FinBERT sentiment and MiniLM sentence embeddings are optional, frozen pretrained models. MiniLM compares article text with a short reference description of each event class. When the Kaggle artifacts are installed, XGBoost predicts the absolute next-day single-stock price move from the same frozen MiniLM vector. Without those artifacts, exact risk terms drive event classification and a documented rule-based score provides severity.
 
 The trained target is the log absolute next-day price move from the EDT news/market benchmark. The output is scaled to 1–10 using training-set movement quantiles. This is a market-movement proxy, not a causal event impact or portfolio-loss forecast. A time-ordered holdout is compared against a median baseline before retaining the model.
 
@@ -14,7 +14,7 @@ For each portfolio asset, the engine applies equity beta, rate duration, and spr
 
 ## Data and operating assumptions
 
-The repository supplies generated sample news and a generated 12-position portfolio because the organizer does not provide transaction data. The dashboard accepts replacement CSV data. The engine uses explicit event shocks and preserves every position-level contribution so the result can be verified.
+The project supplies generated sample news and a generated 12-position portfolio because no organizer transaction data was provided. The dashboard accepts replacement CSV data. The engine uses explicit event shocks and preserves every position-level contribution so the result can be verified.
 
 ## Architecture
 

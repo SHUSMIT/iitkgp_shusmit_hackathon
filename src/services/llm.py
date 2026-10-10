@@ -42,7 +42,7 @@ def answer_news_question(
         }
         response = requests.post(GROQ_URL, json=payload, timeout=45, headers=headers)
         if response.status_code == 429:
-            last_error = f'Groq model {model} was rate limited.'
+            last_error = f'Groq model {model} was temporarily unavailable.'
             continue
         if response.status_code >= 400:
             raise RuntimeError(f'Groq request failed with HTTP {response.status_code}: {response.text[:300]}')

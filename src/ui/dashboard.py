@@ -11,7 +11,7 @@ API_URL = os.getenv('RISKPULSE_API_URL', 'http://127.0.0.1:8000').rstrip('/')
 
 st.set_page_config(page_title='RiskPulse | Portfolio Stress', page_icon='📉', layout='wide')
 st.title('RiskPulse')
-st.caption('Event driven portfolio stress testing · Module B prototype')
+st.caption('Event driven portfolio stress testing · Module B')
 
 
 def backend_get(path: str) -> dict:
@@ -34,7 +34,7 @@ with st.sidebar:
     except requests.RequestException:
         st.error('Backend unavailable. Start it with: uvicorn src.api.app:app --reload')
 
-    source_label = st.radio('News input', ['Included demo', 'Fetch public feeds', 'Upload CSV'])
+    source_label = st.radio('News input', ['Sample news', 'Fetch public feeds', 'Upload CSV'])
     news_upload = st.file_uploader('News CSV', type='csv', disabled=source_label != 'Upload CSV')
     with st.expander('Live feed settings', expanded=source_label == 'Fetch public feeds'):
         hours = st.slider('Look-back window (hours)', 1, 168, 24)
@@ -49,7 +49,7 @@ with st.sidebar:
     run_button = st.button('Run portfolio analysis', type='primary', use_container_width=True)
 
 if run_button:
-    source_map = {'Included demo': 'sample', 'Fetch public feeds': 'live', 'Upload CSV': 'upload'}
+    source_map = {'Sample news': 'sample', 'Fetch public feeds': 'live', 'Upload CSV': 'upload'}
     payload: dict = {
         'source': source_map[source_label],
         'hours': hours,
@@ -141,4 +141,4 @@ if not scenarios.empty:
 
 signals_csv = signals.to_csv(index=False).encode('utf-8')
 st.download_button('Download analyzed signals', signals_csv, 'riskpulse_signals.csv', 'text/csv')
-st.caption('Scenario shocks are illustrative assumptions. The current severity score is not a validated loss forecast.')
+st.caption('Scenario shocks are analyst-defined assumptions. The current severity score is not a validated loss forecast.')

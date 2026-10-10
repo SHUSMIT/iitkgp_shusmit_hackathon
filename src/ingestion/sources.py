@@ -54,7 +54,7 @@ def fetch_gdelt(query: str, timespan: str = '24h', max_records: int = 50, timeou
         headers={'User-Agent': 'RiskPulse-Hackathon/1.0'},
     )
     if r.status_code == 429:
-        raise requests.HTTPError('GDELT rate limit reached; continuing with other sources.', response=r)
+        raise requests.HTTPError('GDELT temporarily unavailable; continuing with other sources.', response=r)
     r.raise_for_status()
     payload = r.json()
     out: list[Article] = []

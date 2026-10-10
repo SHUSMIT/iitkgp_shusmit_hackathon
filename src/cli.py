@@ -23,7 +23,7 @@ def main() -> None:
     p = sub.add_parser('analyze')
     p.add_argument('--input', required=True)
     p.add_argument('--output', default='runtime/signals.csv')
-    p.add_argument('--fallback-only', action='store_true')
+    p.add_argument('--lexical-only', action='store_true')
 
     p = sub.add_parser('stress-test')
     p.add_argument('--signals', required=True)
@@ -38,7 +38,7 @@ def main() -> None:
         return
 
     if args.command == 'analyze':
-        df = analyze_file(args.input, args.output, heavy_models=not args.fallback_only)
+        df = analyze_file(args.input, args.output, heavy_models=not args.lexical_only)
         print(f'wrote {len(df)} signals to {args.output}')
         if not df.empty:
             print(df[['source','title','sentiment','event_class','impact_score','triggered_stress']].head(10).to_string(index=False))

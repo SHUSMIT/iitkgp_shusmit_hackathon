@@ -13,7 +13,7 @@ The price label is an imperfect proxy: the source assigns tickers automatically 
 
 ## Data volume
 
-The bundled live RSS snapshot has 30 rows and is only for a demo. It is far too small to train XGBoost meaningfully.
+The bundled live RSS snapshot has 30 rows. It is far too small to train XGBoost meaningfully.
 
 For the first model run, the notebook uses 50,000 rows from the timestamped benchmark, sorted by publication date. That gives about 40,000 training rows and 10,000 latest-date validation rows. A 384-dimension float16 embedding cache is about 37 MiB before compression. The benchmark's full 303,893 rows are a later option; their float16 vectors are about 223 MiB before compression. XGBoost consumes float32 arrays during training, still well within a typical notebook's memory budget at this size.
 

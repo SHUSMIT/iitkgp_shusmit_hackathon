@@ -163,7 +163,7 @@ function App() {
           <div className="explain-grid">
             <div><strong>What this solves</strong><p>Turns market-moving headlines into explainable event signals and shows which portfolio positions are most exposed.</p></div>
             <div><strong>What happens</strong><p>Headlines are normalized, scored for sentiment and event type, ranked from 1–10, then high-impact events are transmitted through beta, duration, spread, PD, and LGD.</p></div>
-            <div><strong>Important assumptions</strong><p>A score of 7+ triggers a scenario. The portfolio and sample news are synthetic; live sources can be partial; shocks are illustrative, not forecasts or causal loss estimates.</p></div>
+            <div><strong>Important assumptions</strong><p>A score of 7+ triggers a scenario. The portfolio and sample news are generated; live sources can return partial coverage; shocks are analyst-defined scenario assumptions, not forecasts or causal loss estimates.</p></div>
           </div>
         </section>
 
