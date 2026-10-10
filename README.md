@@ -41,6 +41,22 @@ The prototype supports bundled synthetic sample news, a public RSS/GDELT live mo
 
 The system is a decision-support prototype for event-driven portfolio risk triage. It is not a causal news-impact model, a guaranteed price forecast, or a production credit-risk system. A severity score of 7 or higher activates a stress scenario; lower scores leave portfolio values unchanged.
 
+## Problem-statement requirement coverage
+
+| Requirement from the case study | Implementation |
+|---|---|
+| Ingest at least two unstructured-data sources | Live mode makes one bounded request to Google News RSS and one to GDELT DOC 2.0. NewsAPI is an optional third source when a key is configured. |
+| Produce a sentiment score from -1 to 1 | Every analyzed article includes numeric `sentiment` and `sentiment_label` fields. |
+| Classify the event | Every analyzed article includes `event_class` and `event_confidence`, including categories such as Geopolitical, Macroeconomic, Credit Event, and Merger/Acquisition. |
+| Produce an impact score from 1 to 10 | Every analyzed article includes `impact_score`; `triggered_stress` is true at 7 or above. |
+| Make signals consumable by downstream applications | FastAPI exposes `/analyze` and `/pipeline/run`; the CLI can write analyzed signals to CSV. |
+| Implement at least one downstream module | Module B is implemented as the portfolio stress engine and dashboard. |
+| Use a mixed wholesale-banking-style portfolio | The bundled synthetic portfolio contains loans, bonds, derivatives, equities, and credit exposures with beta, duration, spread duration, PD, and LGD. |
+| Trigger stress from event class and impact | The workflow selects the highest-impact article in each event class and applies the corresponding scenario when the score is at least 7. |
+| Show before/after portfolio impact | The API and dashboard show baseline value, stressed value, total loss, loss percentage, scenario shocks, and asset-level contributions. |
+
+The original prompt refers to “provided sample transaction data,” but no organizer-provided transaction file is present in this repository. The included `data/portfolio.csv` is therefore explicitly synthetic and is used only to demonstrate the required Module B behavior. If an official sample transaction file is supplied later, it can be uploaded through the portfolio CSV control without changing the stress engine.
+
 ## Architecture and tech stack
 
 1. The React/Vite dashboard requests the FastAPI workflow.

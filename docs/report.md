@@ -8,6 +8,18 @@ The submission guidelines require a working public repository, a 5–7 slide PDF
 
 Risk teams receive more public financial news than they can manually triage. RiskPulse turns those headlines into event signals and maps high-severity events to portfolio exposures so an analyst can prioritize review and explain the result position by position.
 
+## Case-study requirement coverage
+
+The selected downstream application is **Module B: Strategic Portfolio Stress Testing**. The implementation satisfies the core engine requirements as follows:
+
+- Two live unstructured sources are wired into the same run: Google News RSS and GDELT DOC 2.0. NewsAPI is optional.
+- The API returns numeric sentiment, event classification, event confidence, impact score, source metadata, and a stress-trigger flag.
+- `/analyze` exposes structured signals directly; `/pipeline/run` consumes those signals and returns downstream scenarios.
+- The synthetic portfolio contains loans, bonds, derivatives, equities, and credit exposures.
+- Event-specific shocks are applied when impact is at least 7, and results include before/after values plus asset-level contributions.
+
+The case study mentions provided sample transaction data, but no such organizer-provided file is present in the repository. The bundled portfolio is intentionally synthetic and the UI accepts a replacement portfolio CSV, so this assumption is visible rather than implied.
+
 ## End-to-end method
 
 1. Read bundled sample data, an uploaded CSV, or public Google News/GDELT feeds.
