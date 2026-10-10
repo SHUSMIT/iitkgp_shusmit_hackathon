@@ -99,7 +99,8 @@ L3 = layer(2, '3  NLP ENGINE', [
 _bw = L3[0]['w']
 _y4 = bots[3] + 0.2
 L4 = [box(L3[0]['x'], _y4, _bw, LH - 0.4, 'Structured signal', 'Sentiment, event class,\nimpact score, entities', BLUE),
-      box(L3[1]['x'], _y4, 3 * _bw + 0.4, LH - 0.4, 'Stress trigger gate', 'Impact score of 7 or more activates a scenario;\nlower scores are monitored without stress', BLUE)]
+      box(L3[1]['x'], _y4, _bw, LH - 0.4, 'Stress trigger gate', 'Impact of 7 or more\nstarts a scenario', BLUE),
+      box(L3[2]['x'], _y4, 2 * _bw + 0.2, LH - 0.4, 'Monitored signals', 'Scores below 7 stay in the ranked signal list\nfor review; no stress run is triggered', BLUE)]
 band(MX, bots[3], MW, LH, '4  SIGNALS', vertical=True)
 L5 = layer(4, '5  MODULE B', [
     ('Portfolio loader', 'Validates value, beta,\nduration, PD, LGD'),
@@ -115,7 +116,7 @@ fan_in(L1, L2[0], mids[0])
 side(L2[0], L2[1]); side(L2[1], L2[2])
 fan_out(L2[2], L3, mids[1])
 fan_in(L3, L4[0], mids[2])
-side(L4[0], L4[1])
+side(L4[0], L4[1]); side(L4[1], L4[2])
 head(L5[1]['cx'], L4[1]['bot'], L5[1]['top'])
 for a, b in zip(L5[:-1], L5[1:]):
     side(a, b)
