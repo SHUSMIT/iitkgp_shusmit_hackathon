@@ -1,95 +1,146 @@
-"""Regenerate docs/architecture.png from the current RiskPulse architecture."""
-
+"""Regenerate docs/architecture.png (layered RiskPulse architecture)."""
 from pathlib import Path
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from matplotlib.patches import FancyBboxPatch, FancyArrowPatch, Rectangle
 
-from PIL import Image, ImageDraw, ImageFont
+OUT = Path(__file__).resolve().parents[1] / 'docs' / 'architecture.png'
+W, H = 12.2, 12.55
+TEAL, PURPLE, ORANGE, GREEN, BLUE = '#2A9DAA', '#7A6BC4', '#E0954A', '#4FA27A', '#3B7DC1'
+INK, MUTED, EDGE, FILL, BAND, LINE = '#14253B', '#5F7186', '#C9D6E2', '#FFFFFF', '#F1F5F9', '#5B7C99'
 
-
-WIDTH, HEIGHT = 2200, 1120
-image = Image.new('RGB', (WIDTH, HEIGHT), '#F4F7FA')
-draw = ImageDraw.Draw(image)
-font_dir = Path('C:/Windows/Fonts')
-
-
-def font(name: str, size: int):
-    path = font_dir / name
-    return ImageFont.truetype(str(path), size) if path.exists() else ImageFont.load_default()
-
-
-regular, small = font('segoeui.ttf', 23), font('segoeui.ttf', 18)
-bold, title, eyebrow = font('seguisb.ttf', 25), font('seguisb.ttf', 42), font('seguisb.ttf', 17)
-draw.text((70, 42), 'RiskPulse | Module B', font=title, fill='#13283A')
-draw.text((72, 100), 'News ingestion, frozen text inference, CPU impact model, and transparent portfolio stress', font=regular, fill='#718298')
-
-columns = [
-    (60, 180, 290, 500, '01  PUBLIC INPUTS'),
-    (400, 180, 280, 500, '02  INGESTION'),
-    (730, 180, 390, 500, '03  EVENT INTELLIGENCE'),
-    (1170, 180, 300, 500, '04  SIGNALS'),
-    (1520, 180, 300, 500, '05  PORTFOLIO STRESS'),
-    (1870, 180, 270, 500, '06  PRODUCT'),
-]
-for x, y, width, height, label in columns:
-    draw.rounded_rectangle((x, y, x + width, y + height), radius=20, fill='#FFFFFF', outline='#DDE6ED', width=2)
-    draw.text((x + 19, y + 19), label, font=eyebrow, fill='#7D91A4')
+fig = plt.figure(figsize=(W, H), dpi=200)
+ax = fig.add_axes([0, 0, 1, 1])
+ax.set_xlim(0, W); ax.set_ylim(0, H); ax.axis('off')
 
 
-def card(x, y, width, height, heading, lines, accent='#54B9C8', fill='#FAFCFD'):
-    draw.rounded_rectangle((x, y, x + width, y + height), radius=14, fill=fill, outline='#E1E9EF', width=2)
-    draw.rounded_rectangle((x, y, x + 7, y + height), radius=4, fill=accent)
-    draw.text((x + 22, y + 15), heading, font=bold, fill='#233C52')
-    for i, line in enumerate(lines):
-        draw.text((x + 22, y + 49 + i * 25), line, font=small, fill='#718298')
+def band(x, y, w, h, label):
+    ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle='round,pad=0,rounding_size=0.12', fc=BAND, ec=EDGE, lw=1.1))
+    ax.text(x + 0.2, y + h - 0.22, label, fontsize=9.5, color=MUTED, fontweight='bold', va='center')
 
 
-def arrow(x1, y1, x2, y2, color='#7596A7', width=4):
-    import math
-
-    draw.line((x1, y1, x2, y2), fill=color, width=width)
-    angle = math.atan2(y2 - y1, x2 - x1)
-    length = 13
-    p1 = (x2 - length * math.cos(angle - 0.5), y2 - length * math.sin(angle - 0.5))
-    p2 = (x2 - length * math.cos(angle + 0.5), y2 - length * math.sin(angle + 0.5))
-    draw.polygon([(x2, y2), p1, p2], fill=color)
+def box(x, y, w, h, title, sub, color):
+    ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle='round,pad=0,rounding_size=0.08', fc=FILL, ec=EDGE, lw=1.0, zorder=3))
+    ax.add_patch(Rectangle((x, y + 0.07), 0.07, h - 0.14, fc=color, ec='none', zorder=4))
+    ax.text(x + 0.2, y + h - 0.25, title, fontsize=10.5, color=INK, fontweight="bold", va="center", zorder=5)
+    ax.text(x + 0.2, y + h - 0.5, sub, fontsize=8.8, color=MUTED, va='top', linespacing=1.35, zorder=5)
+    return dict(x=x, y=y, w=w, h=h, cx=x + w / 2, top=y + h, bot=y)
 
 
-card(82, 258, 245, 92, 'Google News RSS', ['Recent headlines; query driven'], '#59BEC9')
-card(82, 377, 245, 92, 'GDELT DOC', ['News metadata; can rate-limit'], '#8195D5')
-card(82, 496, 245, 92, 'CSV upload', ['News and portfolio inputs'], '#A888D2')
-card(422, 330, 236, 130, 'Normalize + deduplicate', ['Source metadata and dates', 'Stable article IDs'], '#4CAEB7')
-for y in (304, 423, 542):
-    arrow(327, y, 422, 394)
-card(752, 248, 345, 92, 'Frozen FinBERT (optional)', ['Sentiment inference; no fine-tuning'], '#8F80C7')
-card(752, 365, 345, 92, 'Frozen MiniLM + prototypes', ['Event classification and embeddings'], '#4AA9BB')
-card(752, 482, 345, 92, 'XGBoost CPU / rule fallback', ['Severity proxy, calibrated 1 to 10'], '#E6A269')
-arrow(658, 395, 752, 294)
-arrow(658, 395, 752, 411)
-arrow(658, 395, 752, 528)
-card(1192, 330, 256, 130, 'Structured event signals', ['Event, sentiment, severity', 'Entity, source, confidence'], '#4CAEB7')
-arrow(1097, 294, 1192, 374)
-arrow(1097, 411, 1192, 395)
-arrow(1097, 528, 1192, 432)
-card(1542, 268, 256, 92, 'Portfolio exposures', ['Synthetic sample or CSV upload'], '#8195D5')
-card(1542, 407, 256, 110, 'Scenario stress engine', ['Equity beta / rate duration', 'Spread and credit shocks'], '#E6A269')
-arrow(1448, 462, 1542, 462)
-arrow(1670, 360, 1670, 407)
-card(1892, 248, 226, 88, 'FastAPI service', ['Validation and workflow'], '#4E98BE')
-card(1892, 366, 226, 88, 'React + Vite UI', ['Signals, scenarios, charts'], '#4E98BE')
-card(1892, 484, 226, 88, 'CSV exports', ['Signals and loss detail'], '#7BAE94')
-arrow(1798, 462, 1892, 292)
-arrow(1798, 462, 1892, 410)
-arrow(1798, 462, 1892, 528)
+def line(xs, ys, color=LINE, lw=1.6):
+    ax.plot(xs, ys, color=color, lw=lw, solid_capstyle='round', zorder=6)
 
-draw.rounded_rectangle((60, 748, 2140, 1047), radius=20, fill='#EDF3F7', outline='#D7E2EA', width=2)
-draw.text((84, 766), 'OFFLINE MODEL BUILD | RUN ON KAGGLE WHEN RETRAINING', font=eyebrow, fill='#617B8F')
-card(90, 817, 420, 116, 'Public EDT benchmark', ['News + next-day single-stock price labels', 'Large download; fetched on demand'], '#8296D1', '#F8FBFD')
-card(670, 817, 420, 116, 'Kaggle GPU embeddings', ['Frozen MiniLM; resumable batches', 'Cache retained for reproducibility'], '#4AA9BB', '#F8FBFD')
-card(1260, 817, 420, 116, 'CPU XGBoost training', ['Chronological holdout vs median baseline', 'Compact model + calibration artifacts'], '#E6A269', '#F8FBFD')
-arrow(510, 875, 670, 875)
-arrow(1090, 875, 1260, 875)
-arrow(1470, 817, 920, 580, color='#D59B63', width=3)
-draw.text((1510, 770), 'impact_xgb.json + calibration', font=small, fill='#9D754F')
-draw.text((83, 1003), 'Prototype only | EDT labels are noisy | portfolio shocks are illustrative', font=small, fill='#77899A')
 
-image.save('docs/architecture.png', optimize=True)
-print(f'Wrote docs/architecture.png ({WIDTH}x{HEIGHT})')
+def head(x, y0, y1, color=LINE, lw=1.6):
+    ax.add_patch(FancyArrowPatch((x, y0), (x, y1), arrowstyle='-|>', mutation_scale=13, lw=lw, color=color, zorder=6, shrinkA=0, shrinkB=0))
+
+
+def fan_in(srcs, dst, ymid, dst_x=None):
+    """Several boxes above feed one box below through a bus line."""
+    dx = dst['cx'] if dst_x is None else dst_x
+    xs = [s['cx'] for s in srcs] + [dx]
+    for s in srcs:
+        line([s['cx'], s['cx']], [s['bot'], ymid])
+    line([min(xs), max(xs)], [ymid, ymid])
+    head(dx, ymid, dst['top'])
+
+
+def fan_out(src, dsts, ymid, src_x=None):
+    sx = src['cx'] if src_x is None else src_x
+    xs = [d['cx'] for d in dsts] + [sx]
+    line([sx, sx], [src['bot'], ymid])
+    line([min(xs), max(xs)], [ymid, ymid])
+    for d in dsts:
+        head(d['cx'], ymid, d['top'])
+
+
+def side(a, b, color=LINE):
+    ym = a['y'] + a['h'] / 2 - 0.12
+    ax.add_patch(FancyArrowPatch((a['x'] + a['w'], ym), (b['x'], ym), arrowstyle='-|>', mutation_scale=13, lw=1.5, color=color, zorder=6, shrinkA=0, shrinkB=0))
+
+
+ax.text(0.25, H - 0.4, 'RiskPulse  |  System Architecture', fontsize=18, color=INK, fontweight='bold', va='center')
+ax.text(0.25, H - 0.8, 'Unstructured news to structured risk signals to portfolio stress results', fontsize=10.5, color=MUTED, va='center')
+
+MX, MW = 0.25, 8.95
+SX, SW = 9.5, 2.45
+LH, GAP = 1.5, 0.45
+top = H - 1.2
+bots = [top - i * (LH + GAP) - LH for i in range(6)]
+mids = [bots[i] - GAP / 2 for i in range(5)]  # bus heights below layer i
+
+
+def layer(i, label, specs, colors):
+    y = bots[i]
+    band(MX, y, MW, LH, label)
+    n, pad, gap = len(specs), 0.2, 0.2
+    bw = (MW - 2 * pad - (n - 1) * gap) / n
+    return [box(MX + pad + k * (bw + gap), y + 0.14, bw, LH - 0.55, t, s, colors[k]) for k, (t, s) in enumerate(specs)]
+
+
+L1 = layer(0, '1  DATA SOURCES', [
+    ('Google News RSS', 'Query-driven headlines\nand summaries'),
+    ('GDELT DOC 2.0', 'Global news metadata,\nrefreshed every 15 min'),
+    ('NewsAPI (optional)', 'Key-based additional\nnews source'),
+    ('CSV upload', 'News and portfolio\nfiles')], [TEAL] * 4)
+L2 = layer(1, '2  INGESTION LAYER   src/ingestion', [
+    ('Schema normalisation', 'Common article record:\ntitle, summary, time, URL'),
+    ('Deduplication', 'URL-level merge across\nsources, stable article IDs'),
+    ('Text preparation', 'Title and summary joined,\nlength-bounded')], [TEAL] * 3)
+L3 = layer(2, '3  AI / NLP RISK ENGINE   src/models', [
+    ('Sentiment', 'FinBERT probabilities\nto a score in [-1, 1]'),
+    ('Event classifier', 'Domain terms + MiniLM\nclass-description match'),
+    ('Entity matcher', 'Company / ticker\nlookup in text'),
+    ('Impact scorer', 'XGBoost on MiniLM\nembeddings, scaled 1-10')], [PURPLE, PURPLE, PURPLE, ORANGE])
+L4 = layer(3, '4  SIGNAL CONTRACT   JSON / CSV', [
+    ('Structured risk signal', 'sentiment, event_class, confidence,\nimpact_score, entities, source'),
+    ('Stress trigger gate', 'impact_score >= 7 activates a\nscenario; below 7 is monitored')], [BLUE, BLUE])
+L5 = layer(4, '5  MODULE B: STRATEGIC STRESS ENGINE   src/stress', [
+    ('Portfolio loader', 'Validates value, beta,\nduration, PD, LGD'),
+    ('Scenario selector', 'Top-impact event per class\nselects the shock vector'),
+    ('Market shock engine', 'Equity beta, rate and\nspread-duration effects'),
+    ('Credit loss engine', 'Incremental EL:\nnotional x dPD x LGD')], [GREEN] * 4)
+L6 = layer(5, '6  DELIVERY   src/api, web', [
+    ('FastAPI service', '/analyze  /stress-test\n/pipeline/run  /portfolio'),
+    ('React dashboard', 'Signals, scenarios, charts,\nposition drill-down'),
+    ('CSV export', 'Signals and position-level\nloss detail')], [BLUE] * 3)
+
+fan_in(L1, L2[0], mids[0], dst_x=L2[0]['x'] + L2[0]['w'] * 0.55)
+side(L2[0], L2[1]); side(L2[1], L2[2])
+fan_out(L2[2], L3, mids[1])
+fan_in(L3, L4[0], mids[2], dst_x=L4[0]['x'] + L4[0]['w'] * 0.55)
+side(L4[0], L4[1])
+fan_out(L4[1], [L5[1]], mids[3])
+for a, b in zip(L5[:-1], L5[1:]):
+    side(a, b)
+fan_out(L5[3], L6, mids[4])
+
+# offline model build (flows upward into the impact scorer)
+band_y, band_top = bots[4], bots[2] + LH
+band(SX, band_y, SW, band_top - band_y, 'OFFLINE MODEL BUILD')
+sub = [('Model artifacts', 'impact_xgb.json +\ncalibration (p10 / p90)', ORANGE),
+       ('XGBoost training', 'Time-ordered holdout\nvs median baseline', ORANGE),
+       ('Kaggle GPU', 'Frozen MiniLM\nembeddings', TEAL),
+       ('EDT benchmark', 'Public news + next-day\nprice moves', PURPLE)]
+bh, gap = 0.95, 0.26
+ob = []
+y = band_top - 0.5 - bh
+for t, s, c in sub:
+    ob.append(box(SX + 0.15, y, SW - 0.3, bh, t, s, c))
+    y -= bh + gap
+for upper, lower in zip(ob[:-1], ob[1:]):
+    head(upper['cx'], lower['top'], upper['bot'], lw=1.5)
+imp = L3[3]
+ya = ob[0]['y'] + ob[0]['h'] / 2 - 0.12
+ax.add_patch(FancyArrowPatch((ob[0]['x'], ya), (imp['x'] + imp['w'], ya), arrowstyle='-|>', mutation_scale=13, lw=1.7, color=ORANGE, zorder=6, shrinkA=0, shrinkB=0))
+
+# legend
+lx, ly = SX + 0.15, bots[5] + LH - 0.35
+ax.text(lx, ly + 0.2, 'LEGEND', fontsize=9, color=MUTED, fontweight='bold')
+for k, (c, t) in enumerate([(TEAL, 'Ingestion / data'), (PURPLE, 'NLP inference'), (ORANGE, 'Learned impact model'), (GREEN, 'Stress engine'), (BLUE, 'Contract / delivery')]):
+    ax.add_patch(Rectangle((lx, ly - 0.2 - k * 0.24), 0.15, 0.15, fc=c, ec='none'))
+    ax.text(lx + 0.27, ly - 0.125 - k * 0.24, t, fontsize=8.8, color=INK, va='center')
+
+fig.savefig(OUT, dpi=200, facecolor='white')
+print('wrote', OUT)

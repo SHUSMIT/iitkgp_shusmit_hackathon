@@ -67,7 +67,7 @@ NewsAPI (optional)┘
         portfolio totals, asset losses, related news
 ```
 
-The architecture diagram is also available in [architecture.png](architecture.png) and [architecture.dot](architecture.dot).
+The architecture diagram is available in [architecture.png](architecture.png).
 
 ### 3.2 Components
 
