@@ -4,7 +4,7 @@
 
 \usepackage{graphicx,booktabs,array,tabularx,xcolor,enumitem,amsmath,float}
 \usepackage[colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
-\usepackage{titlesec,fancyhdr}
+\usepackage{titlesec,fancyhdr,needspace}
 \definecolor{accent}{HTML}{1F4E79}
 \titleformat{\section}{\large\bfseries\color{accent}}{\thesection}{0.6em}{}
 \titleformat{\subsection}{\normalsize\bfseries\color{accent}}{\thesubsection}{0.5em}{}
@@ -134,6 +134,7 @@ Regulatory/Legal & $-7\%$ & +50bp & +125bp & 1.25 & Product Launch & $+3\%$ & 0b
 \caption{Event-specific shocks (equity return, rate move, spread move, PD multiplier).}
 \end{table}
 
+\Needspace{12\baselineskip}
 \textbf{Loss calculation.} For impact score $s\ge7$ shocks are scaled by $k=s/10$ (PD multiplier $1+(m-1)k$). For position $i$ with value $V_i$, beta $\beta_i$, duration $D_i$, spread duration $S_i$ and notional $N_i$:
 \begin{align*}
 f_i &= 1 + \beta_i\Delta_{\text{eq}} - D_i\Delta_{\text{rate}} - S_i\Delta_{\text{spread}}, \qquad

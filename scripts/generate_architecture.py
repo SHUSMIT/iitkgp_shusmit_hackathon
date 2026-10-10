@@ -79,7 +79,7 @@ def layer(i, label, specs, colors):
     band(MX, y, MW, LH, label, vertical=True)
     n, left, pad, gap = len(specs), 0.6, 0.2, 0.2
     bw = (MW - left - pad - (n - 1) * gap) / n
-    return [box(MX + left + k * (bw + gap), y + 0.14 + 0.12, bw, LH - 0.4, t, s, colors[k]) for k, (t, s) in enumerate(specs)]
+    return [box(MX + left + k * (bw + gap), y + 0.2, bw, LH - 0.4, t, s, colors[k]) for k, (t, s) in enumerate(specs)]
 
 
 L1 = layer(0, '1  SOURCES', [
@@ -97,7 +97,7 @@ L3 = layer(2, '3  NLP ENGINE', [
     ('Entity matcher', 'Company / ticker\nlookup in text'),
     ('Impact scorer', 'XGBoost on MiniLM\nembeddings, scaled 1-10')], [PURPLE, PURPLE, PURPLE, ORANGE])
 _bw = L3[0]['w']
-_y4 = bots[3] + 0.14 + 0.12
+_y4 = bots[3] + 0.2
 L4 = [box(L3[0]['x'], _y4, _bw, LH - 0.4, 'Structured signal', 'Sentiment, event class,\nimpact score, entities', BLUE),
       box(L3[1]['x'], _y4, 3 * _bw + 0.4, LH - 0.4, 'Stress trigger gate', 'Impact score of 7 or more activates a scenario;\nlower scores are monitored without stress', BLUE)]
 band(MX, bots[3], MW, LH, '4  SIGNALS', vertical=True)
