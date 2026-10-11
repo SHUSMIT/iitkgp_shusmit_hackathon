@@ -1,29 +1,54 @@
-# RiskPulse - S&P Global & Crisil Campus Hackathon
+# iitkgp-shusmit-hackathon - S&P Global & Crisil Campus Hackathon
 
-| | |
-|---|---|
-| **Candidate Name** | Shusmit Sarkar |
-| **College Email ID** | shusmit.sarkar@gmail.com |
-| **College / Campus** | IIT Kharagpur |
-| **Demo Video Link** | [YouTube unlisted link] |
-| **Slide Deck** | [docs/presentation.pdf](docs/presentation.pdf) |
-| **Selected Module** | Module B - Strategic Portfolio Stress Testing |
+**Candidate Name:** Shusmit Sarkar
+**College Email ID:** shusmit.sarkar@gmail.com
+**College / Campus:** IIT Kharagpur
+**Demo Video Link:** https://youtu.be/OYIBV7PF0Wk
+**Slide Deck Link (if hosted externally):** N/A - the written report is included as [`docs/presentation.pdf`](docs/presentation.pdf)
 
 ## 1. Project Overview / Problem Statement & Approach
 
-Risk teams must turn a constant flow of unstructured news into decisions: which events matter, what kind of events they are, and which exposures they touch. RiskPulse is a unified AI/NLP Risk Engine that ingests text from multiple public sources and outputs, for every article, a sentiment score in [-1, 1], an event class with confidence, matched entities, and a 1-10 impact score, all as structured JSON/CSV.
+Risk teams need to convert a continuous stream of unstructured financial news into structured, explainable risk intelligence. This project implements a unified AI/NLP Risk Engine that ingests public news from Google News RSS and GDELT, or bundled/uploaded CSV records, and produces a sentiment score, event classification, confidence, matched entities, and a 1-10 impact score for each article.
 
-These signals drive **Module B**, an event-driven portfolio stress-testing tool. When an event's impact score is 7 or higher, the highest-impact article of each event class activates an event-specific scenario (equity, interest-rate, spread and PD shocks) that is applied to a mixed wholesale-banking portfolio of loans, bonds, derivatives, equities and credit exposures. Scores below 7 leave the portfolio unchanged.
+The selected downstream application is **Module B: Strategic Portfolio Stress Testing**. High-impact events activate event-specific equity, interest-rate, spread, and credit-loss shocks against a synthetic wholesale-banking portfolio. The dashboard shows the baseline and stressed portfolio values, scenario loss, shocks, position-level impact, and the news item that drove each scenario.
 
-The approach combines frozen pretrained language models (FinBERT, MiniLM) with transparent domain rules and a learned impact model (XGBoost on MiniLM embeddings, trained on a public news-to-price-move benchmark with a time-ordered holdout). Stress shocks are explicit and auditable, and the dashboard shows baseline vs. stressed value, scenario shocks, position-level losses and related news.
+The implementation combines frozen pretrained FinBERT and MiniLM inference where available with deterministic lexical and domain-rule fallback logic. The fallback keeps the complete workflow runnable when model downloads are unavailable. The impact model is an XGBoost model trained on a public news and market-price benchmark; all stress shocks are explicit, auditable scenario assumptions.
 
-## Run it
+## 2. Architecture & Tech Stack
 
-### 1. One-time setup
+The system flow is:
 
-Run this once from the repository root. It creates the single project environment, installs Python dependencies, and installs the frontend dependencies.
+`Google News RSS / GDELT / CSV upload -> normalization and deduplication -> NLP risk inference -> structured signals -> Module B stress engine -> FastAPI -> React/Vite dashboard`
+
+![Architecture diagram](docs/architecture.png)
+
+- **Ingestion:** Google News RSS, GDELT DOC 2.0, optional NewsAPI, and CSV upload.
+- **Risk inference:** FinBERT sentiment, MiniLM event descriptions, entity matching, lexical fallback, and XGBoost impact scoring.
+- **Stress engine:** Portfolio schema validation, event-specific shocks, beta/duration/spread transmission, and PD/LGD credit-loss calculations.
+- **API:** FastAPI and Uvicorn endpoints for health, portfolio retrieval, analysis, stress testing, and the complete pipeline.
+- **Dashboard:** React, Vite, Recharts, Papa Parse, and Lucide icons.
+- **Runtime dependencies:** Python 3.13, pandas, NumPy, scikit-learn, XGBoost, requests, FastAPI, and Uvicorn. Optional pretrained-model dependencies are listed in `requirements-models.txt`.
+
+## 3. Dataset Used
+
+- `data/portfolio.csv` is a fully synthetic 12-position wholesale-banking portfolio containing loans, bonds, derivatives, equities, and credit exposure. It uses recognizable public-company names and tickers such as Apple, Alphabet, Oracle, Microsoft, Exxon Mobil, Chevron, JPMorgan Chase, and Bank of America only to make the demonstration understandable; the values and risk parameters are synthetic.
+- `data/sample_news.csv` contains generated financial-news records covering multiple event classes for deterministic offline demonstration.
+- `data/public_news_snapshot.csv` contains a reproducible snapshot of publicly available news records.
+- `data/entity_universe.csv` contains a small public company and ticker lookup list used for entity matching.
+- Live ingestion uses public Google News RSS and GDELT DOC 2.0 endpoints. NewsAPI is optional and requires a local key.
+- The impact-model training source is a public news and market-price benchmark. The source is not proprietary and the downloaded training data is not required to run the bundled demo.
+
+**Assumptions:** The portfolio, bundled sample records, and all company exposures are synthetic. No S&P Global, Crisil, client, confidential, or proprietary data is used. A score of 7 or higher triggers a stress scenario. Shocks are illustrative scenario assumptions, not forecasts or causal loss estimates. Public-news feeds can return partial coverage or no matching articles, while the bundled sample mode is available for a deterministic demonstration.
+
+## 4. Quickstart & Installation
+
+Runtime: **Python 3.13.14 on Windows 11 using PowerShell**. Node.js 20+ and npm are required for the dashboard.
+
+From a fresh clone:
 
 ```powershell
+git clone https://github.com/SHUSMIT/spglobal.git
+cd spglobal
 py -3.13 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
@@ -31,91 +56,19 @@ python -m pip install -r requirements-models.txt
 Push-Location web
 npm install
 Pop-Location
-```
-
-### 2. Start the complete application
-
-Run this from the repository root. The script starts the API, starts the React/Vite frontend, opens the dashboard, and stops both services when you press Ctrl+C.
-
-```powershell
 .\scripts\run.ps1
 ```
 
-If your terminal is already inside `web`, use:
+The final command is the exact application entry point from the repository root. It starts the FastAPI API, waits for `/health`, starts the React/Vite dashboard, and opens `http://127.0.0.1:5173`. The API is available at `http://127.0.0.1:8000`. Press `Ctrl+C` to stop both services.
 
-```powershell
-.\scripts\run.ps1
-```
-
-The same launcher is available from both locations.
-
-The dashboard opens at `http://127.0.0.1:5173`; the API runs at `http://127.0.0.1:8000`. The first model-backed analysis downloads the frozen inference weights and caches them locally. To use the optional conversational analyst or NewsAPI, copy `.env.example` to `.env` and add the relevant local key; never commit `.env`.
-
-## 2. Architecture & Tech Stack
-
-![Architecture](docs/architecture.png)
-
-**Data flow:** Google News RSS / GDELT DOC 2.0 / NewsAPI (optional) / CSV upload -> normalisation and URL deduplication -> NLP inference (sentiment, event class, entities, impact) -> structured signals -> Module B stress engine (with portfolio) -> FastAPI -> React dashboard and CSV export.
-
-| Layer | Role |
-|---|---|
-| Ingestion | Fetch, clean and deduplicate articles from all sources |
-| Risk inference | FinBERT sentiment, MiniLM class-description event classification, entity matching, XGBoost impact score |
-| Impact training | Offline training and calibration of the impact model |
-| Stress engine | Portfolio validation, event shocks, asset-level loss |
-| Workflow and API | Orchestration and endpoints for analysis, stress testing, pipeline runs and portfolio retrieval |
-| Dashboard | Signals, scenarios, charts, position drill-down, export |
-
-**Tech stack:** Python, FastAPI, pandas, NumPy, scikit-learn, XGBoost, FinBERT and MiniLM (frozen transformer inference), React, Vite, Recharts, Papa Parse.
-
-**Stress model:** for a triggered event with score `s`, shocks are scaled by `s/10`. Per position: `price_factor = 1 + beta * equity_shock - duration * rate_shock - spread_duration * spread_shock`, plus incremental credit loss `notional * (PD_stressed - PD) * LGD` for loans, bonds and credit exposures.
-
-## 3. Dataset Used
-
-- **Portfolio:** 12-position synthetic wholesale-banking portfolio (3 loans, 3 bonds, 2 derivatives, 3 equities, 1 credit pool; total value USD 105.12M) with value, notional, beta, duration, spread duration, PD and LGD.
-- **Sample news:** generated financial-news records covering multiple event types, used to exercise the full pipeline.
-- **News snapshot:** public Google News RSS headlines captured for reproducibility.
-- **Entity lookup:** small public company and ticker list used for entity matching.
-- **Impact model training data:** the public EDT news and market-price benchmark (downloaded by the training notebook, not bundled); 50,000 of 75,395 valid rows used.
-- **Live sources:** Google News RSS and GDELT DOC 2.0 (NewsAPI optional).
-
-All bundled datasets are in the `data` folder.
-
-**Assumptions:** the portfolio is synthetic and not a real institution's book; shocks are illustrative scenario assumptions; the impact score is a market-movement proxy, not a causal loss forecast; ticker assignments in public benchmarks can be imperfect. A replacement portfolio CSV must contain `asset_id`, `asset_type`, `current_value`, `notional`, `equity_beta`, `duration`, `spread_duration`, `pd`, `lgd` (optional: `sector`, `counterparty`, `ticker`).
-
-## 4. Quickstart & Installation
-
-See **Run it first** in section 1 for the exact commands. Optional configuration: copy `.env.example` to `.env` for NewsAPI or the analyst assistant key; never commit `.env`.
-
-Validation:
-
-```powershell
-.\.venv\Scripts\python.exe -m pytest -q
-Push-Location web
-npm run build
-Pop-Location
-```
+For a deterministic offline walkthrough, select **Sample portfolio news** in the dashboard. The first model-backed run may download and cache pretrained weights; if optional model initialization is unavailable, the deterministic lexical fallback still produces complete signals and stress scenarios.
 
 ## 5. Key Results & Domain Impact
 
-- **Engine output:** every article gets `sentiment`, `sentiment_label`, `event_class`, `event_confidence`, `impact_score` and `triggered_stress`, via API or CSV export.
-- **Impact model:** time-ordered holdout MAE 1.699 pp vs 1.731 pp for a median baseline (`models/training_report.json`).
-- **Stress results at severity 8 on the USD 105.12M portfolio:**
+- The engine returns structured sentiment, event class, event confidence, matched entity, impact score, and stress-trigger status for every analyzed article.
+- Module B reports baseline value, stressed value, absolute loss or gain, loss percentage, scenario shocks, and position-level asset impact.
+- The synthetic portfolio contains 12 positions across five asset types and demonstrates transmission through equity beta, interest-rate duration, credit spread duration, PD, and LGD.
+- The dashboard supports sample, live-feed, and uploaded-news workflows, portfolio CSV upload, signal export, scenario selection, position drill-down, and an analyst query panel.
+- The result is useful to risk analysts because it turns unstructured public information into severity-ranked events and shows how an event-specific scenario affects named exposures.
 
-| Event class | Stressed value (USD M) | Loss (USD M) | Loss % |
-|---|---|---|---|
-| Macroeconomic | 93.54 | 11.58 | 11.02 |
-| Credit Event | 93.78 | 11.34 | 10.79 |
-| Geopolitical | 94.49 | 10.63 | 10.11 |
-| Market Liquidity | 94.63 | 10.49 | 9.98 |
-| Regulatory/Legal | 97.39 | 7.73 | 7.35 |
-| Operational/Cyber | 99.49 | 5.63 | 5.36 |
-| Merger/Acquisition | 108.34 | -3.22 (gain) | -3.07 |
-
-![Results](docs/results.png)
-
-- **Domain impact:** analysts get a severity-ranked, classified signal list, see which loans, bonds, derivatives and equities are exposed and by how much, and can audit or recalibrate every shock and sensitivity. The JSON/CSV contract lets other downstream consumers plug into the same engine.
-
-## License
-
-MIT. See [LICENSE](LICENSE).
+The written submission report is available at [`docs/presentation.pdf`](docs/presentation.pdf). The repository also contains the required [`LICENSE`](LICENSE), [`requirements.txt`](requirements.txt), [`src/`](src/), and [`data/`](data/) directories.
