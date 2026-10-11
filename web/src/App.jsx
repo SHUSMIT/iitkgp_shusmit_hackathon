@@ -35,7 +35,7 @@ function parseCsv(file) {
 
 async function fetchJson(url, options = {}) {
   const controller = new AbortController()
-  const timeout = window.setTimeout(() => controller.abort(), 120000)
+  const timeout = window.setTimeout(() => controller.abort(), options.timeoutMs || 120000)
   try {
     const response = await fetch(url, { ...options, signal: controller.signal })
     const text = await response.text()
@@ -82,7 +82,24 @@ function App() {
   const [chatLoading, setChatLoading] = useState(false)
 
   useEffect(() => {
-    fetchJson(`${API}/health`).then(() => setApiOnline(true)).catch(() => setApiOnline(false))
+    let cancelled = false
+    let timer
+    const checkHealth = async () => {
+      try {
+        await fetchJson(`${API}/health`, { timeoutMs: 5000 })
+        if (!cancelled) setApiOnline(true)
+      } catch {
+        if (!cancelled) {
+          setApiOnline(false)
+          timer = window.setTimeout(checkHealth, 1500)
+        }
+      }
+    }
+    checkHealth()
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
   }, [])
 
   function scrollToSection(id) {
