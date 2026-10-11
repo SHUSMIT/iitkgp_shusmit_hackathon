@@ -112,6 +112,10 @@ COMPANY_CONTEXT = [
     'shares', 'stock', 'earnings', 'revenue', 'profit', 'ceo', 'inc', 'corp', 'nasdaq', 'nyse',
     'investor', 'analyst', 'quarter', 'iphone', 'cloud', 'bond', 'debt', 'loan', 'lawsuit', 'regulator',
 ]
+NON_FINANCIAL_TERMS = [
+    'booties', 'shoes', 'sneakers', 'dress', 'fashion', 'recipe', 'restaurant',
+    'celebrity', 'football', 'soccer', 'concert', 'movie', 'album',
+]
 
 
 def _match_name(text: str, alias: str) -> bool:
@@ -129,6 +133,18 @@ def _name_hit(text: str, name: str) -> bool:
     if hit and name in AMBIGUOUS:
         lowered = text.lower()
         hit = any(re.search(r'(?<![a-z])' + re.escape(c) + r'(?![a-z])', lowered) for c in COMPANY_CONTEXT)
+    if hit:
+        lowered = text.lower()
+        has_non_financial_context = any(
+            re.search(r'(?<![a-z])' + re.escape(term) + r'(?![a-z])', lowered)
+            for term in NON_FINANCIAL_TERMS
+        )
+        has_company_context = any(
+            re.search(r'(?<![a-z])' + re.escape(term) + r'(?![a-z])', lowered)
+            for term in COMPANY_CONTEXT
+        )
+        if has_non_financial_context and not has_company_context:
+            hit = False
     return hit
 
 

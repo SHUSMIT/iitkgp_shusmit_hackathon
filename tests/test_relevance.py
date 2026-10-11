@@ -48,6 +48,7 @@ def test_ambiguous_names_need_company_context():
     assert score_article('Apple pie recipes for the autumn season', '', PORTFOLIO)['relevance'] == 'none'
     assert score_article('Apple shares fall after weak iPhone demand', '', PORTFOLIO)['relevance'] == 'holding'
     assert score_article('Oracle bone inscriptions found at dig site', '', PORTFOLIO)['relevance'] == 'none'
+    assert score_article('Clarks ankle booties available at Walmart', '', PORTFOLIO)['relevance'] == 'none'
 
 
 def test_title_match_outranks_summary_only_match():
