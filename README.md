@@ -7,7 +7,7 @@
 | **College / Campus** | IIT Kharagpur |
 | **Demo Video Link** | [YouTube unlisted link] |
 | **Slide Deck** | [docs/presentation.pdf](docs/presentation.pdf) |
-| **Written Report** | [docs/report.pdf](docs/report.pdf) |
+| **Written Report** | [docs/report.md](docs/report.md) |
 | **Selected Module** | Module B - Strategic Portfolio Stress Testing |
 
 ## 1. Project Overview / Problem Statement & Approach
@@ -36,6 +36,10 @@ npm run dev
 ```
 
 Open the Vite URL printed in the terminal. The first model-backed run downloads the frozen inference weights and caches them locally. To use the optional conversational analyst or NewsAPI, copy `.env.example` to `.env` and add the relevant local key; never commit `.env`.
+
+## Recorded presentation script
+
+For the video submission, follow [docs/presentation_readme.md](docs/presentation_readme.md). It contains the exact timestamped screen actions and narration to show the complete Module B flow. [docs/demo_script.md](docs/demo_script.md) is the short index to that recording script.
 
 ## 2. Architecture & Tech Stack
 
