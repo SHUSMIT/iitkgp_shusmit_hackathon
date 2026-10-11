@@ -101,8 +101,8 @@ class RiskInference:
         if errors:
             # Model downloads and Torch/Transformers versions are optional
             # runtime dependencies. Keyword and lexical inference remains
-            # deterministic and is required for an offline demonstration.
-            self.bundle.mode = 'lexical-fallback'
+            # deterministic and is required for offline runs.
+            self.bundle.mode = 'lexical'
         else:
             self.bundle.mode = 'pretrained'
 

@@ -9,3 +9,5 @@ runtime/*.json
 runtime/*.log
 .cache/
 .pytest_cache/
+
+models/embedding_cache.npz
