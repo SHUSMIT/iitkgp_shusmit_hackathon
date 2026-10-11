@@ -51,8 +51,8 @@ Runtime: **Python 3.13.14 on Windows 11 using PowerShell**. Node.js 20+ and npm 
 From a fresh clone:
 
 ```powershell
-git clone https://github.com/SHUSMIT/spglobal.git
-cd spglobal
+git clone https://github.com/SHUSMIT/iitkgp_shusmit_hackathon.git
+cd iitkgp_shusmit_hackathon
 py -3.13 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
