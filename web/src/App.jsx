@@ -17,6 +17,71 @@ const money = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currenc
 const pct = (n) => `${Number(n || 0).toFixed(2)}%`
 const portfolioColumns = ['asset_id', 'asset_type', 'current_value', 'notional', 'equity_beta', 'duration', 'spread_duration', 'pd', 'lgd']
 
+function inlineMarkdown(text) {
+  const parts = String(text).split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g)
+  return parts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) return <strong key={index}>{part.slice(2, -2)}</strong>
+    if (part.startsWith('*') && part.endsWith('*')) return <em key={index}>{part.slice(1, -1)}</em>
+    if (part.startsWith('`') && part.endsWith('`')) return <code key={index}>{part.slice(1, -1)}</code>
+    return part
+  })
+}
+
+function AnalystAnswer({ content }) {
+  const lines = String(content).split(/\r?\n/)
+  const blocks = []
+  let index = 0
+  while (index < lines.length) {
+    const line = lines[index].trim()
+    if (!line) {
+      index += 1
+      continue
+    }
+    if (line.includes('|') && index + 1 < lines.length && /^\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)+\|?$/.test(lines[index + 1].trim())) {
+      const headers = line.split('|').map((cell) => cell.trim()).filter(Boolean)
+      const rows = []
+      index += 2
+      while (index < lines.length && lines[index].includes('|') && lines[index].trim()) {
+        rows.push(lines[index].split('|').map((cell) => cell.trim()).filter(Boolean))
+        index += 1
+      }
+      blocks.push(<table key={`table-${index}`}><thead><tr>{headers.map((cell) => <th key={cell}>{inlineMarkdown(cell)}</th>)}</tr></thead><tbody>{rows.map((row, rowIndex) => <tr key={rowIndex}>{headers.map((_, cellIndex) => <td key={cellIndex}>{inlineMarkdown(row[cellIndex] || '')}</td>)}</tr>)}</tbody></table>)
+      continue
+    }
+    if (/^#{1,3}\s/.test(line)) {
+      blocks.push(<h3 key={`heading-${index}`}>{inlineMarkdown(line.replace(/^#{1,3}\s+/, ''))}</h3>)
+      index += 1
+      continue
+    }
+    if (/^[-*]\s+/.test(line)) {
+      const items = []
+      while (index < lines.length && /^[-*]\s+/.test(lines[index].trim())) {
+        items.push(<li key={index}>{inlineMarkdown(lines[index].trim().replace(/^[-*]\s+/, ''))}</li>)
+        index += 1
+      }
+      blocks.push(<ul key={`list-${index}`}>{items}</ul>)
+      continue
+    }
+    if (/^\d+\.\s+/.test(line)) {
+      const items = []
+      while (index < lines.length && /^\d+\.\s+/.test(lines[index].trim())) {
+        items.push(<li key={index}>{inlineMarkdown(lines[index].trim().replace(/^\d+\.\s+/, ''))}</li>)
+        index += 1
+      }
+      blocks.push(<ol key={`ordered-list-${index}`}>{items}</ol>)
+      continue
+    }
+    const paragraph = [line]
+    index += 1
+    while (index < lines.length && lines[index].trim() && !/[|]|^#{1,3}\s|^[-*]\s+|^\d+\.\s+/.test(lines[index].trim())) {
+      paragraph.push(lines[index].trim())
+      index += 1
+    }
+    blocks.push(<p key={`paragraph-${index}`}>{inlineMarkdown(paragraph.join(' '))}</p>)
+  }
+  return <div className="analyst-answer">{blocks}</div>
+}
+
 function parseCsv(file) {
   return new Promise((resolve, reject) => Papa.parse(file, {
     header: true, skipEmptyLines: true, dynamicTyping: true,
@@ -251,7 +316,7 @@ function App() {
             {scenario ? <div className="portfolio-grid"><div className="loss-summary"><div className="loss-summary-top"><span className="summary-label">STRESSED PORTFOLIO VALUE</span><span className={`status-chip ${scenario.triggered ? 'triggered' : 'watch'}`}>{scenario.triggered ? 'Scenario triggered' : 'Below trigger'}</span></div><div className="portfolio-total">{money(scenario.after_value)}</div><div className="portfolio-before">from {money(scenario.before_value)} baseline value</div><div className="loss-divider" /><div className="loss-stats"><div><span>{netGain ? 'Net gain' : 'Net loss'}</span><b className={netGain ? '' : 'loss-red'}>{money(Math.abs(scenario.loss_value))}</b></div><div><span>Net portfolio impact</span><b className={netGain ? '' : 'loss-red'}>{pct(-scenario.loss_pct)}</b></div></div><div className="scenario-article"><span>SCENARIO DRIVER</span><p>{scenario.article_title}</p></div><div className="shock-tags">{Object.entries(scenario.shocks || {}).slice(0, 4).map(([k, v]) => <span key={k}>{k.replaceAll('_', ' ')} <b>{typeof v === 'number' ? v.toFixed(2) : v}</b></span>)}</div></div>
               <div className="asset-impact"><div className="asset-heading"><div><h3>Net impact by position</h3><p>Click a position for its sensitivities and related news</p></div><span>{assets.length} positions</span></div><div className="asset-chart"><ResponsiveContainer width="100%" height="100%"><BarChart data={assets.slice(0, 8)} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 0 }}><CartesianGrid stroke="#243347" horizontal={false} /><XAxis type="number" tickFormatter={(n) => `${(n / 1e6).toFixed(1)}m`} tick={{ fill: '#8291a4', fontSize: 11 }} axisLine={false} tickLine={false} /><YAxis type="category" dataKey="asset_id" width={52} tick={{ fill: '#b8c4d2', fontSize: 11 }} axisLine={false} tickLine={false} /><Tooltip formatter={(v) => money(v)} contentStyle={{ borderRadius: 12, border: '1px solid #243347', background: '#101c2b', color: '#f4f7fb' }} /><Bar dataKey="asset_loss" radius={[0, 5, 5, 0]} barSize={16}>{assets.slice(0, 8).map((a, i) => <Cell key={a.asset_id} fill={a.asset_loss > 0 ? palette[(i + 2) % palette.length] : '#54c7d8'} />)}</Bar></BarChart></ResponsiveContainer></div><div className="asset-list">{assets.map((a) => <button className="asset-row" key={a.asset_id} onClick={() => setSelectedAsset(a)}><span><i className="asset-bullet" />{a.asset_id} <small>{a.asset_type}</small></span><b className={a.asset_loss > 0 ? 'loss-red' : ''}>{money(a.asset_loss)}</b></button>)}</div></div></div> : <div className="no-results">No portfolio scenarios were returned.</div>}
           </section>
-          <section className="panel analyst-panel"><div className="panel-heading"><div><h2><MessageCircle size={17} /> AI risk analyst</h2><p>Ask about all analyzed news or the selected position.</p></div></div><div className="analyst-input"><input value={chatQuestion} onChange={(e) => setChatQuestion(e.target.value)} placeholder="What are the main risks across these news events?" onKeyDown={(e) => e.key === 'Enter' && askRiskAnalyst()} /><button className="button primary" onClick={askRiskAnalyst} disabled={chatLoading || !signals.length}>{chatLoading ? 'Analyzing…' : 'Ask Groq'}</button></div>{chatAnswer && <div className="analyst-answer">{chatAnswer}</div>}</section>
+          <section className="panel analyst-panel"><div className="panel-heading"><div><h2><MessageCircle size={17} /> AI risk analyst</h2><p>Ask about all analyzed news or the selected position.</p></div></div><div className="analyst-input"><input value={chatQuestion} onChange={(e) => setChatQuestion(e.target.value)} placeholder="What are the main risks across these news events?" onKeyDown={(e) => e.key === 'Enter' && askRiskAnalyst()} /><button className="button primary" onClick={askRiskAnalyst} disabled={chatLoading || !signals.length}>{chatLoading ? 'Analyzing…' : 'Ask Groq'}</button></div>{chatAnswer && <AnalystAnswer content={chatAnswer} />}</section>
           <footer className="page-footer"><span>RISKPULSE · EVENT-DRIVEN PORTFOLIO STRESS TESTING</span><span><Clock3 size={13} /> Updated {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></footer>
         </>}
       </section>
