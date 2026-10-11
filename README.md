@@ -8,7 +8,7 @@
 
 **Demo Video Link:** https://youtu.be/OYIBV7PF0Wk
 
-**Slide Deck Link:** docs/presentation.pdf
+**Slide Deck Link:** [docs/presentation.pdf](docs/presentation.pdf)
 
 ## 1. Project Overview / Problem Statement & Approach
 
@@ -77,14 +77,14 @@ For a deterministic offline walkthrough, select **Sample portfolio news** in the
 
 The written submission report is available at:
 
-docs/presentation.pdf
+[docs/presentation.pdf](docs/presentation.pdf)
 
 The repository also contains the required:
 
-LICENSE
+[LICENSE](LICENSE)
 
-requirements.txt
+[requirements.txt](requirements.txt)
 
-src/
+[src/](src/)
 
-data/
+[data/](data/)
