@@ -1,10 +1,14 @@
 # iitkgp-shusmit-hackathon - S&P Global & Crisil Campus Hackathon
 
-**Candidate Name:** Shusmit Sarkar
-**College Email ID:** shusmit.sarkar@gmail.com
-**College / Campus:** IIT Kharagpur
-**Demo Video Link:** https://youtu.be/OYIBV7PF0Wk
-**Slide Deck Link (if hosted externally):** N/A - the written report is included as [`docs/presentation.pdf`](docs/presentation.pdf)
+**Candidate Name:** Shusmit Sarkar  
+
+**College Email ID:** shusmit.sarkar@gmail.com  
+
+**College / Campus:** IIT Kharagpur  
+
+**Demo Video Link:** https://youtu.be/OYIBV7PF0Wk  
+
+**Slide Deck Link:** docs/presentation.pdf
 
 ## 1. Project Overview / Problem Statement & Approach
 
@@ -71,4 +75,16 @@ For a deterministic offline walkthrough, select **Sample portfolio news** in the
 - The dashboard supports sample, live-feed, and uploaded-news workflows, portfolio CSV upload, signal export, scenario selection, position drill-down, and an analyst query panel.
 - The result is useful to risk analysts because it turns unstructured public information into severity-ranked events and shows how an event-specific scenario affects named exposures.
 
-The written submission report is available at [`docs/presentation.pdf`](docs/presentation.pdf). The repository also contains the required [`LICENSE`](LICENSE), [`requirements.txt`](requirements.txt), [`src/`](src/), and [`data/`](data/) directories.
+The written submission report is available at:
+
+docs/presentation.pdf
+
+The repository also contains the required:
+
+LICENSE
+
+requirements.txt
+
+src/
+
+data/
