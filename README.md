@@ -1,12 +1,12 @@
 # iitkgp-shusmit-hackathon - S&P Global & Crisil Campus Hackathon
 
-**Candidate Name:** Shusmit Sarkar  
+**Candidate Name:** Shusmit Sarkar
 
-**College Email ID:** shusmit.sarkar@gmail.com  
+**College Email ID:** shusmit.sarkar@gmail.com
 
-**College / Campus:** IIT Kharagpur  
+**College / Campus:** IIT Kharagpur
 
-**Demo Video Link:** https://youtu.be/OYIBV7PF0Wk  
+**Demo Video Link:** https://youtu.be/OYIBV7PF0Wk
 
 **Slide Deck Link:** docs/presentation.pdf
 
