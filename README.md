@@ -2,7 +2,7 @@
 
 **Candidate Name:** Shusmit Sarkar
 
-**College Email ID:** shusmit.sarkar@gmail.com
+**College Email ID:** shusmit.sarkar@kgpian.iitkgp.ac.in
 
 **College / Campus:** IIT Kharagpur
 
