@@ -7,7 +7,6 @@
 | **College / Campus** | IIT Kharagpur |
 | **Demo Video Link** | [YouTube unlisted link] |
 | **Slide Deck** | [docs/presentation.pdf](docs/presentation.pdf) |
-| **Written Report** | [docs/report.md](docs/report.md) |
 | **Selected Module** | Module B - Strategic Portfolio Stress Testing |
 
 ## 1. Project Overview / Problem Statement & Approach
@@ -18,28 +17,31 @@ These signals drive **Module B**, an event-driven portfolio stress-testing tool.
 
 The approach combines frozen pretrained language models (FinBERT, MiniLM) with transparent domain rules and a learned impact model (XGBoost on MiniLM embeddings, trained on a public news-to-price-move benchmark with a time-ordered holdout). Stress shocks are explicit and auditable, and the dashboard shows baseline vs. stressed value, scenario shocks, position-level losses and related news.
 
-## Run it first
+## Run it
+
+### 1. One-time setup
+
+Run this once from the repository root. It creates the single project environment, installs Python dependencies, and installs the frontend dependencies.
 
 ```powershell
+py -3.13 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 python -m pip install -r requirements-models.txt
-python -m uvicorn src.api.app:app --reload
+Push-Location web
+npm install
+Pop-Location
 ```
 
-In a second PowerShell terminal:
+### 2. Start the complete application
+
+Run this from the repository root. The script starts the API, starts the React/Vite frontend, opens the dashboard, and stops both services when you press Ctrl+C.
 
 ```powershell
-cd web
-npm install
-npm run dev
+.\scripts\run.ps1
 ```
 
-Open the Vite URL printed in the terminal. The first model-backed run downloads the frozen inference weights and caches them locally. To use the optional conversational analyst or NewsAPI, copy `.env.example` to `.env` and add the relevant local key; never commit `.env`.
-
-## Recorded presentation script
-
-For the video submission, follow [docs/presentation_readme.md](docs/presentation_readme.md). It contains the exact timestamped screen actions and narration to show the complete Module B flow. [docs/demo_script.md](docs/demo_script.md) is the short index to that recording script.
+The dashboard opens at `http://127.0.0.1:5173`; the API runs at `http://127.0.0.1:8000`. The first model-backed analysis downloads the frozen inference weights and caches them locally. To use the optional conversational analyst or NewsAPI, copy `.env.example` to `.env` and add the relevant local key; never commit `.env`.
 
 ## 2. Architecture & Tech Stack
 
