@@ -41,6 +41,14 @@ Run this from the repository root. The script starts the API, starts the React/V
 .\scripts\run.ps1
 ```
 
+If your terminal is already inside `web`, use:
+
+```powershell
+.\scripts\run.ps1
+```
+
+The same launcher is available from both locations.
+
 The dashboard opens at `http://127.0.0.1:5173`; the API runs at `http://127.0.0.1:8000`. The first model-backed analysis downloads the frozen inference weights and caches them locally. To use the optional conversational analyst or NewsAPI, copy `.env.example` to `.env` and add the relevant local key; never commit `.env`.
 
 ## 2. Architecture & Tech Stack
