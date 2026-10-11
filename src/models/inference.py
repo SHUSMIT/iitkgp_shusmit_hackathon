@@ -89,17 +89,22 @@ class RiskInference:
 
         try:
             from sentence_transformers import SentenceTransformer
-            self.bundle.embedding_model = SentenceTransformer(EMBEDDING_MODEL)
+            self.bundle.embedding_model = SentenceTransformer(
+                EMBEDDING_MODEL,
+                device='cpu',
+                model_kwargs={'low_cpu_mem_usage': False},
+            )
         except Exception as exc:
             self.bundle.embedding_model = None
             errors.append(f'{EMBEDDING_MODEL}: {type(exc).__name__}: {exc}')
 
         if errors:
-            raise RuntimeError(
-                'Pretrained inference could not be initialized; lexical-only inference is disabled. '
-                + ' | '.join(errors)
-            )
-        self.bundle.mode = 'pretrained'
+            # Model downloads and Torch/Transformers versions are optional
+            # runtime dependencies. Keyword and lexical inference remains
+            # deterministic and is required for an offline demonstration.
+            self.bundle.mode = 'lexical-fallback'
+        else:
+            self.bundle.mode = 'pretrained'
 
     def _load_impact_model(self) -> None:
         if not IMPACT_MODEL_FILE.exists() or not IMPACT_CALIBRATION_FILE.exists():

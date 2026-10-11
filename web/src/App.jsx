@@ -15,13 +15,44 @@ const API = '/api'
 const palette = ['#54c7d8', '#8b9cff', '#efab65', '#ed7485', '#81c7a7', '#c58bef', '#f3d16d']
 const money = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(n || 0))
 const pct = (n) => `${Number(n || 0).toFixed(2)}%`
+const portfolioColumns = ['asset_id', 'asset_type', 'current_value', 'notional', 'equity_beta', 'duration', 'spread_duration', 'pd', 'lgd']
 
 function parseCsv(file) {
   return new Promise((resolve, reject) => Papa.parse(file, {
     header: true, skipEmptyLines: true, dynamicTyping: true,
-    complete: ({ data, errors }) => errors.length ? reject(new Error(errors[0].message)) : resolve(data),
+    complete: ({ data, errors, meta }) => {
+      if (errors.length) {
+        reject(new Error(errors[0].message))
+      } else if (!meta.fields?.length || !data.length) {
+        reject(new Error('The selected CSV is empty or has no header row.'))
+      } else {
+        resolve(data)
+      }
+    },
     error: reject,
   }))
+}
+
+async function fetchJson(url, options = {}) {
+  const controller = new AbortController()
+  const timeout = window.setTimeout(() => controller.abort(), 120000)
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal })
+    const text = await response.text()
+    let data
+    try {
+      data = text ? JSON.parse(text) : {}
+    } catch {
+      throw new Error(`The API returned an invalid response (HTTP ${response.status}).`)
+    }
+    if (!response.ok) throw new Error(data.detail || `The API request failed (HTTP ${response.status}).`)
+    return data
+  } catch (error) {
+    if (error.name === 'AbortError') throw new Error('The analysis timed out after two minutes. Check that the API is running and try again.')
+    throw error
+  } finally {
+    window.clearTimeout(timeout)
+  }
 }
 
 function Metric({ icon: Icon, label, value, note, tone = 'blue' }) {
@@ -51,8 +82,18 @@ function App() {
   const [chatLoading, setChatLoading] = useState(false)
 
   useEffect(() => {
-    fetch(`${API}/health`).then((r) => setApiOnline(r.ok)).catch(() => setApiOnline(false))
+    fetchJson(`${API}/health`).then(() => setApiOnline(true)).catch(() => setApiOnline(false))
   }, [])
+
+  function scrollToSection(id) {
+    const section = document.getElementById(id)
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    } else {
+      setError('Run an analysis first to populate this section.')
+      document.getElementById('analysis-controls')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
 
   async function runAnalysis() {
     setLoading(true); setError('')
@@ -64,17 +105,21 @@ function App() {
       }
       if (portfolioFile) {
         payload.portfolio = await parseCsv(portfolioFile)
+        const fields = Object.keys(payload.portfolio[0] || {})
+        const missing = portfolioColumns.filter((column) => !fields.includes(column))
+        if (missing.length) {
+          throw new Error(`Portfolio CSV is missing required columns: ${missing.join(', ')}`)
+        }
       } else {
-        const portfolioResponse = await fetch(`${API}/portfolio`)
-        const portfolioData = await portfolioResponse.json()
-        if (!portfolioResponse.ok) throw new Error(portfolioData.detail || 'The portfolio CSV could not be loaded.')
+        const portfolioData = await fetchJson(`${API}/portfolio`)
         payload.portfolio = portfolioData.assets
       }
-      const response = await fetch(`${API}/pipeline/run`, {
+      const data = await fetchJson(`${API}/pipeline/run`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
       })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.detail || 'The analysis request failed.')
+      if (!data.signals?.length || !data.scenarios?.length) {
+        throw new Error('The analysis completed without signals or portfolio scenarios.')
+      }
       setResult(data)
       const firstTriggered = (data.scenarios || []).findIndex((item) => item.triggered)
       setActiveScenario(firstTriggered >= 0 ? firstTriggered : 0)
@@ -129,9 +174,9 @@ function App() {
     <aside className="sidebar">
       <div className="brand"><div className="brand-mark"><Activity size={20} /></div><div><b>risk<span>pulse</span></b><small>PORTFOLIO INTELLIGENCE</small></div></div>
       <div className="workspace-label">WORKSPACE</div>
-      <button className="side-link active"><Layers3 size={17} /> Event stress <span className="side-dot" /></button>
-      <button className="side-link" onClick={() => document.getElementById('signals')?.scrollIntoView({ behavior: 'smooth' })}><BarChart3 size={17} /> Risk signals</button>
-      <button className="side-link" onClick={() => document.getElementById('portfolio')?.scrollIntoView({ behavior: 'smooth' })}><BriefcaseBusiness size={17} /> Portfolio impact</button>
+      <button className="side-link active" onClick={() => scrollToSection('analysis-controls')}><Layers3 size={17} /> Event stress <span className="side-dot" /></button>
+      <button className="side-link" onClick={() => scrollToSection('signals')}><BarChart3 size={17} /> Risk signals</button>
+      <button className="side-link" onClick={() => scrollToSection('portfolio')}><BriefcaseBusiness size={17} /> Portfolio impact</button>
       <div className="sidebar-bottom">
         <div className="source-status"><span className={`status-dot ${apiOnline ? 'online' : ''}`} /><div><b>{apiOnline ? 'API connected' : 'API offline'}</b><small>{apiOnline ? 'Risk engine ready' : 'Start FastAPI on :8000'}</small></div></div>
         <div className="sidebar-foot"><ShieldCheck size={14} /> Public and synthetic data only</div>
@@ -143,7 +188,7 @@ function App() {
       <section className="page-content">
         <div className="page-heading"><div><div className="eyebrow"><Sparkles size={13} /> MODULE B · EVENT-DRIVEN RISK</div><h1>Portfolio analysis</h1><p>Turn market-moving news into explainable portfolio scenarios.</p></div><button className="button secondary" onClick={downloadSignals} disabled={!signals.length}><Download size={16} /> Export signals</button></div>
 
-        <section className="control-panel">
+        <section className="control-panel" id="analysis-controls">
           <div className="control-title"><div className="control-icon"><SlidersHorizontal size={17} /></div><div><b>Analysis controls</b><span>Choose data and run the risk engine</span></div></div>
           <div className="control-row">
             <label className="field"><span>NEWS SOURCE</span><div className="select-wrap"><Globe2 size={15} /><select value={source} onChange={(e) => setSource(e.target.value)}><option value="sample">Sample portfolio news</option><option value="live">Google News + GDELT feeds</option><option value="upload">Upload news CSV</option></select><ChevronDown size={15} /></div></label>
