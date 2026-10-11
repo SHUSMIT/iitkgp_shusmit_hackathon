@@ -77,4 +77,4 @@ For a deterministic offline run, select **Sample portfolio news** in the dashboa
 - The dashboard supports sample, live-feed, and uploaded-news workflows, portfolio CSV upload, signal export, scenario selection, position drill-down, and an analyst query panel.
 - The result is useful to risk analysts because it turns unstructured public information into severity-ranked events and shows how an event-specific scenario affects named exposures.
 
-The written report with the system design, results and assumptions is available at [docs/presentation.pdf](docs/presentation.pdf).
+The written report with the system design, results and assumptions is available at [docs/report.pdf](docs/report.pdf).
