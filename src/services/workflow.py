@@ -6,6 +6,7 @@ from typing import Any
 import pandas as pd
 
 from src.config import DATA_DIR, DEFAULT_GDELT_QUERY, DEFAULT_RSS_QUERY
+from src.ingestion.relevance import build_queries, filter_relevant, tag_articles
 from src.ingestion.sources import ingest_all
 from src.models.inference import RiskInference
 from src.stress.model import StressResult, load_portfolio, run_stress, validate_portfolio
@@ -63,36 +64,48 @@ def run_workflow(
     rss_query: str | None = None,
     use_pretrained: bool = True,
 ) -> dict[str, Any]:
-    if source == 'sample':
-        news = pd.read_csv(DATA_DIR / 'sample_news.csv').fillna('').to_dict('records')
-    elif source == 'live':
-        fetched = ingest_all(gdelt_query or DEFAULT_GDELT_QUERY, rss_query or DEFAULT_RSS_QUERY, f'{hours}h', max_records)
-        news = [article.to_dict() for article in fetched]
-    elif source == 'upload':
-        news = articles or []
-    else:
-        raise ValueError('source must be sample, live, or upload')
-
-    signals = analyze_articles(news, use_pretrained)
     portfolio = (
         validate_portfolio(pd.DataFrame(portfolio_rows))
         if portfolio_rows is not None
         else load_portfolio(str(DATA_DIR / 'portfolio.csv'))
     )
+    if source == 'sample':
+        news = tag_articles(pd.read_csv(DATA_DIR / 'sample_news.csv').fillna('').to_dict('records'), portfolio)
+    elif source == 'live':
+        queries = build_queries(portfolio, extra=rss_query or gdelt_query, hours=hours)
+        per_query = max(5, -(-max_records // 3))
+        fetched = ingest_all(queries['gdelt'], queries['rss'], f'{hours}h', per_query)
+        fetched_rows = [article.to_dict() for article in fetched]
+        news = filter_relevant(fetched_rows, portfolio)
+        fetched_count = len(fetched_rows)
+        news = news[: max(max_records * 2, 20)]
+        if not news:
+            raise ValueError('No portfolio-relevant articles were found in the selected window. Try a longer lookback.')
+    elif source == 'upload':
+        news = tag_articles(articles or [], portfolio)
+    else:
+        raise ValueError('source must be sample, live, or upload')
+
+    fetched_count = locals().get('fetched_count', len(news))
+    signals = analyze_articles(news, use_pretrained)
 
     scenarios = []
     for event_class, group in signals.groupby('event_class', sort=False):
-        candidate = group.sort_values(['impact_score', 'event_confidence'], ascending=False).iloc[0]
+        candidate = group.sort_values(['relevance_score', 'impact_score', 'event_confidence'], ascending=False).iloc[0]
         result = serialize_stress(run_stress(portfolio, str(event_class), float(candidate['impact_score'])))
         scenarios.append({
             'event_class': result['event_class'],
             'article_title': str(candidate['title']),
+            'linked_holdings': str(candidate.get('matched_holdings', '')),
             **result,
         })
 
     return {
         'model_mode': _engine(use_pretrained).bundle.mode,
         'article_count': len(signals),
+        'fetched_count': fetched_count,
+        'relevance_summary': signals['relevance'].value_counts().to_dict(),
+        'holdings_covered': sorted({h.strip() for v in signals['matched_holdings'] for h in str(v).split(',') if h.strip() and h.strip() != 'Market-wide'}),
         'portfolio_asset_count': len(portfolio),
         'signals': signals.to_dict(orient='records'),
         'scenarios': scenarios,

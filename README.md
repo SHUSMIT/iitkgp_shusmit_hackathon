@@ -39,7 +39,7 @@ The system flow is:
 - **Sample news:** generated financial-news records covering multiple event classes, used for deterministic offline runs.
 - **News snapshot:** a reproducible snapshot of publicly available news records.
 - **Entity lookup:** a small public company and ticker list used for entity matching.
-- **Live ingestion:** public Google News RSS and GDELT DOC 2.0 endpoints. NewsAPI is optional and requires a local key.
+- **Live ingestion:** public Google News RSS and GDELT DOC 2.0 endpoints. NewsAPI is optional and requires a local key. Google News is searched once per holding and GDELT with combined holdings and market-wide queries, limited to the chosen lookback window. Every article is scored against the portfolio as a holding (title matches rank above summary-only matches), sector or market-wide match; ambiguous names such as Apple or Oracle need company context, and unrelated articles are dropped before analysis.
 - **Impact-model training source:** a public news and market-price benchmark. The source is not proprietary, and the downloaded training data is not required to run the application.
 
 All bundled datasets are in the `data` folder.
@@ -72,6 +72,7 @@ For a deterministic offline run, select **Sample portfolio news** in the dashboa
 ## 5. Key Results & Domain Impact
 
 - The engine returns structured sentiment, event class, event confidence, matched entity, impact score, and stress-trigger status for every analyzed article.
+- News retrieval is portfolio-driven: queries come from the holdings, each signal shows the holdings it is linked to, and each stress scenario is driven by the most relevant article for its event class.
 - Module B reports baseline value, stressed value, absolute loss or gain, loss percentage, scenario shocks, and position-level asset impact.
 - The synthetic portfolio contains 12 positions across five asset types and shows transmission through equity beta, interest-rate duration, credit spread duration, PD, and LGD.
 - The dashboard supports sample, live-feed, and uploaded-news workflows, portfolio CSV upload, signal export, scenario selection, position drill-down, and an analyst query panel.

@@ -4,7 +4,9 @@ from dataclasses import asdict, dataclass
 import hashlib
 import html
 import re
+import time
 import warnings
+from concurrent.futures import ThreadPoolExecutor
 from typing import Iterable
 import xml.etree.ElementTree as ET
 
@@ -156,21 +158,44 @@ def dedupe(articles: Iterable[Article]) -> list[Article]:
     return out
 
 
-def ingest_all(query: str, rss_query: str, timespan: str, max_records: int) -> list[Article]:
+def ingest_all(query, rss_query, timespan: str, max_records: int) -> list[Article]:
+    """Fetch from every source. ``query`` and ``rss_query`` may be a string or a list of queries."""
+    gdelt_queries = [query] if isinstance(query, str) else list(query)
+    rss_queries = [rss_query] if isinstance(rss_query, str) else list(rss_query)
+    jobs = []
+    for i, q in enumerate(gdelt_queries):
+        jobs.append(('gdelt', fetch_gdelt, {'query': q, 'timespan': timespan, 'max_records': max_records}, i))
+    for q in rss_queries:
+        jobs.append(('google_news', fetch_google_news_rss, {'query': q, 'max_records': max_records}, 0))
+    for q in gdelt_queries[:1]:
+        jobs.append(('newsapi', fetch_newsapi, {'query': q, 'max_records': max_records}, 0))
     collected: list[Article] = []
     errors: list[str] = []
-    for label, func, args in [
-        ('gdelt', fetch_gdelt, {'query': query, 'timespan': timespan, 'max_records': max_records}),
-        ('google_news', fetch_google_news_rss, {'query': rss_query, 'max_records': max_records}),
-        ('newsapi', fetch_newsapi, {'query': query, 'max_records': max_records}),
-    ]:
+
+    def note(label: str, exc: Exception) -> None:
+        # One source failing must not make the full pipeline fail.
+        status = getattr(getattr(exc, 'response', None), 'status_code', None)
+        detail = f' HTTP {status}' if status else ''
+        text = f'{label}: {type(exc).__name__}{detail}'
+        if text not in errors:
+            errors.append(text)
+
+    def run(job):
+        label, func, args, _ = job
         try:
-            collected.extend(func(**args))
+            return func(**args)
         except Exception as exc:
-            # One source failing must not make the full pipeline fail.
-            status = getattr(getattr(exc, 'response', None), 'status_code', None)
-            detail = f' HTTP {status}' if status else ''
-            errors.append(f'{label}: {type(exc).__name__}{detail}')
+            note(label, exc)
+            return []
+
+    parallel = [j for j in jobs if j[0] != 'gdelt']
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        for items in pool.map(run, parallel):
+            collected.extend(items)
+    for job in [j for j in jobs if j[0] == 'gdelt']:
+        if job[3] > 0:
+            time.sleep(5.5)  # GDELT asks for at least five seconds between requests
+        collected.extend(run(job))
     result = dedupe(collected)
     if not result and errors:
         raise RuntimeError('All live sources failed: ' + ' | '.join(errors))
